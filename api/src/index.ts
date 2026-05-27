@@ -3,6 +3,7 @@ import { Hono } from "hono"
 import open from "open";
 import envGroupRoute from "./routes/envGroupRoute";
 import envItemRoute from "./routes/envItemRoute";
+import systemRoute from "./routes/systemRoute";
 import { serveStatic } from 'hono/bun'
 
 const app = new Hono();
@@ -11,6 +12,7 @@ app.get('/*', serveStatic({ root: './public' }))
 
 app.route("/api/envm/groups", envGroupRoute);
 app.route("/api/envm/items", envItemRoute);
+app.route("/api/envm/system", systemRoute);
 
 open("http://localhost:3212")
 export default { 

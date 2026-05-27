@@ -19,6 +19,12 @@
       </section>
       <ItemsPannel :currentGroup="currentGroup"></ItemsPannel>
     </section>
+    <el-button  class="absolute right-4 top-4"  size="large" @click="onExit" text >
+      <template #icon>
+        <div class="i-mdi-exit-run text-black"></div>
+      </template>
+      <span>退出系统</span>
+    </el-button>
     <SaveDialog ref="saveDialogRef" @confirm="loadData"></SaveDialog>
     <Editor ref="editor" :libs="editorLibs" @change="onEditorSave"></Editor>
   </div>
@@ -34,6 +40,7 @@ import ItemsPannel from "./items.vue";
 import scriptDefines from "./scriptDefines";
 import { useRoute } from "vue-router";
 import api, { type EnvGroup } from "@/apis/EnvGroup";
+import systemApi from "@/apis/System.ts";
 
 const saveDialogRef = shallowRef()
 const currentGroup = ref('')
@@ -74,6 +81,13 @@ const onEditorSave = (value: string, other: { key: string }) => {
         ElMessage.success('修改成功')
     })
 };
+
+const onExit=()=>{
+  systemApi.exit().then(res=>{
+    window.close()
+    ElMessage.success('已退出')
+  })
+}
 
 </script>
 
