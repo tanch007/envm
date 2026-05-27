@@ -8,6 +8,7 @@ export type EnvGroup = Partial<{
     id: string;
     /** 组名称 */
     name: string;
+    icon?:string;
     /** 路由地址 */
     routeUrl: string;
     /** 列出环境变量的脚本 */

@@ -49,7 +49,7 @@ export async function changeStatus(id:string,status:boolean): Promise<void> {
  * @returns 环境变量项列表
  */
 export async function getItemsByGroup(groupId: string): Promise<EnvItem[]> {
-    const rows = await db<EnvItem[]>`SELECT * FROM env_items WHERE groupId = ${groupId} ORDER BY enable desc,createdAt`;
+    const rows = await db<EnvItem[]>`SELECT * FROM env_items WHERE groupId = ${groupId} ORDER BY createdAt`;
     return rows;
 }
 
