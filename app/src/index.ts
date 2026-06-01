@@ -6,6 +6,7 @@ import systemRoute from "./routes/systemRoute";
 import { serveStatic } from '@hono/node-server/serve-static'
 import { serve } from '@hono/node-server'
 import { wsService } from "./services/wsService";
+import path from "path";
 
 function createWindow(): void {
   // Create the browser window.
@@ -17,7 +18,8 @@ function createWindow(): void {
 
   const app = new Hono();
   //静态资源
-  app.get('/*', serveStatic({ root: './public' }))
+  const publicPath = process.env.NODE_ENV === 'production' ? 'public' : path.join(process.resourcesPath, 'public');
+  app.get('/*', serveStatic({ root: publicPath }))
 
   app.route("/api/envm/groups", envGroupRoute);
   app.route("/api/envm/items", envItemRoute);

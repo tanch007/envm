@@ -2,10 +2,17 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { sql } from 'drizzle-orm';
 import { envGroups, type EnvGroup, type NewEnvGroup } from "./EnvGroup";
 import { envItems, type EnvItem, type NewEnvItem } from "./EnvItem";
+import path from "path";
+import fs from "fs-extra";
 
+const envmDataDir = path.join(process.cwd(),'../', "envm-data","envm.db");
+const dir = path.dirname(envmDataDir);
+if(!fs.existsSync(dir)){
+    fs.mkdirSync(dir, { recursive: true });
+}
 const db = drizzle({
     connection: {
-        source: 'envm.db',
+        source: envmDataDir,
         // nativeBinding:filePath 
     }
 })

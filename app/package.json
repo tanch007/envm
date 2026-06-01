@@ -15,7 +15,8 @@
     "dev": "electron-vite dev",
     "prebuild": "electron-vite build",
     "build": "electron-builder --config electron-builder.ts --dir ",
-    "build:win": "npm run prebuild && electron-builder --config electron-builder.ts --win"
+    "build:win": "npm run prebuild && electron-builder --config electron-builder.ts --win",
+    "build:uiwin":"cd ../ui && yarn build --outDir ../app/public && cd ../app && npm run build:win"
   },
   "dependencies": {
     "7zip-min": "^3.0.1",

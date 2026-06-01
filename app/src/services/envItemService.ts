@@ -11,20 +11,23 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
     const [entity] = await db.select().from(envItems).where(eq(envItems.id, id)).limit(1);
     if (!entity) throw new Error("Item not found");
     const [group] = await db.select().from(envGroups).where(eq(envGroups.id, entity.groupId)).limit(1);
-    const dir = `data/${group?.name}/${entity?.version}`;
-    const fullDir = path.join(process.cwd(), dir);
-    const envDir = path.join(process.cwd(), `/env/${group?.name}`);
+    const envmDataDir = path.join(process.cwd(),'../', "envm-data");
+    const fullDir = path.join(envmDataDir, 'data', group?.name || '', entity?.version || '');
+    const envDir = path.join(envmDataDir, `/env/${group?.name}`);
+    const donloadDir = path.join(envmDataDir, "downloads");
+    const downloadFilePath = path.join(donloadDir, entity.fileName);
 
-    if (status && !await comm.folderExists(dir)) {
+    if (status && !await comm.folderExists(fullDir)) {
         // 下载文件
         if (!entity.urlPath) {
             throw new Error("URL path is empty");
         }
-        if(!await comm.folderExists(`./downloads/${entity.fileName}`)){
+        if(!await comm.folderExists(downloadFilePath)){
             const downloadManager = new DownloadManager({
                 consoleLog: true,
                 overWriteFile: true,
-                method: "simple"
+                method: "simple",
+                downloadFolder: donloadDir
             });
 
             // 监听下载进度并通过 WebSocket 推送
@@ -57,11 +60,15 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
                 itemId: id
             });
         }
+        else
+        {
+            console.log(`File already exists at ${downloadFilePath}, skipping download.`);
+        }
         
         //创建文件夹
-        await fs.mkdir(dir, { recursive: true });
+        await fs.mkdir(fullDir, { recursive: true });
         // 解压文件
-        await comm.extractTo(`./downloads/${entity.fileName}`, dir);
+        await comm.extractTo(downloadFilePath, fullDir);
         await db.update(envItems).set({ dirPath: fullDir }).where(eq(envItems.id, id));
     }
 

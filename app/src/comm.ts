@@ -35,6 +35,14 @@ export async function folderExists(folderPath: string): Promise<boolean> {
  * @param targetDir   目标目录路径，如 './output'
  */
 export async function extractTo(archivePath: string, targetDir: string) {
+
+    const isUsingAsar = 'electron' in process.versions && process.argv.length > 1 && process.argv[1].includes('app.asar');
+    if(process.argv.length < 1){
+        process.argv[1]='app.asar'
+    }
+    // console.log(`Extracting ${archivePath} to ${targetDir}...`,isUsingAsar,process.versions,process.argv.join(','));
+    console.log(`argv =>${process.argv.join(',')}`)
+
     let fileDir = path.dirname(archivePath);
     let tempDir = join(fileDir, `temp_${Date.now()}`);
     return new Promise((resolve, reject) => {
