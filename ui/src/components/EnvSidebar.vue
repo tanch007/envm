@@ -35,9 +35,9 @@
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
       添加环境
     </button>
-    <div class="sidebar-footer">
+    <!-- <div class="sidebar-footer">
       ENVM v0.0.1
-    </div>
+    </div> -->
   </aside>
 </template>
 
