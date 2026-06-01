@@ -15,12 +15,14 @@
     "dev": "electron-vite dev",
     "prebuild": "electron-vite build",
     "build": "electron-builder --config electron-builder.ts --dir ",
-    "build:win": "npm run prebuild && node scripts/remove-sqlite-source.mjs && electron-builder --config electron-builder.ts --win"
+    "build:win": "npm run prebuild && electron-builder --config electron-builder.ts --win"
   },
   "dependencies": {
+    "7zip-min": "^3.0.1",
     "@hono/node-server": "^2.0.4",
     "better-sqlite3": "^12.10.0",
     "drizzle-orm": "^0.45.2",
+    "fs-extra": "^11.3.5",
     "hono": "^4.12.23",
     "node-downloader-manager": "^1.0.11"
   }

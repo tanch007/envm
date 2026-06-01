@@ -12,6 +12,11 @@
           <span class="stat-item">已安装 <span class="stat-value">{{ installedCount }}</span> 个版本</span>
           <span class="stat-item">当前版本 <span class="stat-value">{{ activeVersion || '未设置' }}</span></span>
         </div>
+        <div class="panel-search">
+          <span class="i-mdi-magnify search-icon"></span>
+          <input v-model="searchQuery" placeholder="搜索版本号或文件名…" />
+          <button v-if="searchQuery" class="search-clear i-mdi-close" @click="searchQuery = ''" title="清除搜索"></button>
+        </div>
       </template>
       <template v-else>
         <div class="panel-title">请添加环境</div>
@@ -22,7 +27,7 @@
       <section class="version-list" data-component="Version List" data-od-id="version-list">
         <template v-if="currentEnv && data.length > 0">
           <div
-            v-for="(ver, index) in data"
+            v-for="(ver, index) in filteredData"
             :key="ver.version"
             :class="['version-item', { 'active-version': ver.enable }]"
             data-component="Version Item"
@@ -52,6 +57,7 @@
               <template v-if="ver.enable">
                 <span class="badge badge-active">当前版本</span>
                 <span style="font-size:13px;color:var(--muted);letter-spacing:0.02em">✓ 已激活</span>
+                <button class="btn" @click="changeStatus(ver, false)" :aria-label="'取消激活 ' + ver.version" v-loading="changeLoading">取消激活</button>
               </template>
             </div>
           </div>
@@ -103,14 +109,20 @@ async function handleDelete(row: EnvItem,index:number) {
   })
 }
 
-async function changeStatus(row: EnvItem) {
-    try {
-        await sendChangeStatus({ id:row.id, enable: true });
-        loadData();
-        ElMessage.success("操作成功");
-    } catch (e) {
-        ElMessage.error("操作失败");
+async function changeStatus(row: EnvItem, enableParam?: boolean) {
+  try {
+    // 如果没有安装目录，走下载流程（后端根据行信息处理）
+    if (!row.dirPath) {
+      await sendChangeStatus(row as EnvItem);
+    } else {
+      const enable = typeof enableParam === 'boolean' ? enableParam : !row.enable;
+      await sendChangeStatus({ id: row.id, enable });
     }
+    loadData();
+    ElMessage.success("操作成功");
+  } catch (e) {
+    ElMessage.error("操作失败");
+  }
 }
 
 onMounted(() => {
@@ -127,4 +139,77 @@ const activeVersion = computed(() => {
   const active = data.value.find(a=>a.enable)
   return active?.version || null
 })
+
+const searchQuery = ref('')
+const filteredData = computed(() => {
+  if (!searchQuery.value) return data.value
+  const q = searchQuery.value.toLowerCase()
+  return data.value.filter(v => {
+    return (v.version || '').toLowerCase().includes(q) || (v.fileName || '').toLowerCase().includes(q)
+  })
+})
 </script>
+
+<style scoped>
+.panel-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 12px;
+  height: 36px;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.panel-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.panel-search .search-icon {
+  font-size: 16px;
+  color: var(--muted);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.panel-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--fg);
+  letter-spacing: 0.01em;
+}
+
+.panel-search input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.panel-search .search-clear {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.panel-search .search-clear:hover {
+  background: color-mix(in srgb, var(--fg) 20%, transparent);
+  color: var(--fg);
+}
+</style>

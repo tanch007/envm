@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import envGroupRoute from "./routes/envGroupRoute";
 import envItemRoute from "./routes/envItemRoute";
 import systemRoute from "./routes/systemRoute";
-import { serveStatic } from 'hono/bun'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { serve } from '@hono/node-server'
 
 function createWindow(): void {
@@ -13,7 +13,6 @@ function createWindow(): void {
     height: 670,
     autoHideMenuBar: true
   })
-  mainWindow.loadURL('https://www.baidu.com')
 
   const app = new Hono();
   //静态资源
@@ -23,7 +22,13 @@ function createWindow(): void {
   app.route("/api/envm/items", envItemRoute);
   app.route("/api/envm/system", systemRoute);
 
-  serve(app)
+  const port = Math.floor(Math.random() * (65535 - 1024)) + 1024;
+  serve({ fetch: app.fetch,port }, (info) => {
+    console.log(`Server running at http://localhost:${info.port}`);
+    mainWindow.loadURL(`http://localhost:${info.port}`)
+  })
+
+  // mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {

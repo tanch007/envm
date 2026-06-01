@@ -21,7 +21,7 @@ export default defineConfig({
   base:'./',
   server:{
     proxy:{
-      '/api':'http://localhost:3212'
+      '/api':'http://localhost:28190'
     }
   },
   //这里进行配置别名

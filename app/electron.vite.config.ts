@@ -4,6 +4,7 @@ export default defineConfig({
   main: {
     build:{
       outDir:'dist',
+      sourcemap:true,
       rollupOptions:{
         input:'src/index.ts',
         output:{
@@ -11,7 +12,7 @@ export default defineConfig({
           minify:true,
           codeSplitting:false
         },
-        external:['electron','better-sqlite3']
+        external:['electron','better-sqlite3','7zip-min']
       }
     }
   },
