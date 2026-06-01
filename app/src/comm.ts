@@ -36,12 +36,10 @@ export async function folderExists(folderPath: string): Promise<boolean> {
  */
 export async function extractTo(archivePath: string, targetDir: string) {
 
-    const isUsingAsar = 'electron' in process.versions && process.argv.length > 1 && process.argv[1].includes('app.asar');
+    //修复7zip-min 在 asar 包内无法找到 7z.exe 的问题
     if(process.argv.length < 1){
         process.argv[1]='app.asar'
     }
-    // console.log(`Extracting ${archivePath} to ${targetDir}...`,isUsingAsar,process.versions,process.argv.join(','));
-    console.log(`argv =>${process.argv.join(',')}`)
 
     let fileDir = path.dirname(archivePath);
     let tempDir = join(fileDir, `temp_${Date.now()}`);
