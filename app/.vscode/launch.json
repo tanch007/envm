@@ -8,10 +8,10 @@
             "name": "Debug Main Process",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-vite",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron-vite",
             "windows": {
-                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-vite.cmd"
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron-vite.cmd"
             },
             "runtimeArgs": [
                 "--sourcemap"
@@ -19,6 +19,9 @@
             "env": {
                 "REMOTE_DEBUGGING_PORT": "9222",
                 "VSCODE_DEBUG": "true"
+            },
+            "sourceMapPathOverrides": {
+                "/app/*": "${workspaceFolder}/src/*"
             }
         }
     ]

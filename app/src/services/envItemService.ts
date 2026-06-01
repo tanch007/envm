@@ -69,7 +69,6 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
         await fs.mkdir(fullDir, { recursive: true });
         // 解压文件
         await comm.extractTo(downloadFilePath, fullDir);
-        await db.update(envItems).set({ dirPath: fullDir }).where(eq(envItems.id, id));
     }
 
     if (status) {
@@ -83,7 +82,7 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
 
     // 先将同组其他项设为禁用，再将当前项设为指定状态
     await db.update(envItems).set({ enable: false }).where(ne(envItems.id, id));
-    await db.update(envItems).set({ enable: status }).where(eq(envItems.id, id));
+    await db.update(envItems).set({ enable: status,dirPath: fullDir }).where(eq(envItems.id, id));
 }
 
 /**

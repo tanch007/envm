@@ -18,7 +18,7 @@ function createWindow(): void {
 
   const app = new Hono();
   //静态资源
-  const publicPath = process.env.NODE_ENV === 'production' ? 'public' : path.join(process.resourcesPath, 'public');
+  const publicPath = process.env.VSCODE_DEBUG ? path.join(process.cwd(), 'public') :path.join(process.resourcesPath, 'public');
   app.get('/*', serveStatic({ root: publicPath }))
 
   app.route("/api/envm/groups", envGroupRoute);

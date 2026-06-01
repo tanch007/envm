@@ -39,9 +39,9 @@
             </div>
             <div class="version-status">
               <!-- Available -->
-              <template v-if="!ver.dirPath">
+              <template v-if="!ver.dirPath && !ver.enable && !downloadingMap[ver.id]">
                 <span class="badge badge-available">未安装</span>
-                <button v-if="!downloadingMap[ver.id]" class="btn btn-primary" @click="changeStatus(ver)" :aria-label="'下载 ' + ver.version" :disabled>下载</button>
+                <button class="btn btn-primary" @click="changeStatus(ver)" :aria-label="'下载 ' + ver.version">下载</button>
               </template>
               <!-- Downloading (WebSocket real-time progress) -->
               <template v-if="downloadingMap[ver.id] || ver.status === 'downloading'">
