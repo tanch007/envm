@@ -1,9 +1,11 @@
 .DS_Store
 node_modules
 .history
+.vite
 /logs
 /dist
 /data
+/out
 /downloads
 /release
 
