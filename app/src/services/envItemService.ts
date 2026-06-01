@@ -5,6 +5,7 @@ import * as comm from "../comm";
 import { DownloadManager }  from "node-downloader-manager";
 import path from "node:path";
 import fs from "fs-extra";
+import { wsService } from "./wsService";
 
 export async function changeStatus(id: string, status: boolean): Promise<void> {
     const [entity] = await db.select().from(envItems).where(eq(envItems.id, id)).limit(1);
@@ -26,7 +27,35 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
                 method: "simple"
             });
 
+            // 监听下载进度并通过 WebSocket 推送
+            downloadManager.on('progress', (data) => {
+                const progressStr = data?.progress?.replace('%', '') || '0';
+                const percentage = parseFloat(progressStr);
+                wsService.broadcast({
+                    type: 'download-progress',
+                    itemId: id,
+                    percentage,
+                    received: data?.downloaded || 0,
+                    total: data?.totalSize || 0,
+                    speed: parseFloat(data?.speed || '0')
+                });
+            });
+
+            downloadManager.on('error', (data) => {
+                wsService.broadcast({
+                    type: 'download-error',
+                    itemId: id,
+                    error: typeof data?.error === 'string' ? data.error : (data?.error as Error)?.message || '下载失败'
+                });
+            });
+
             await downloadManager.download(entity.urlPath);
+
+            // 下载完成推送
+            wsService.broadcast({
+                type: 'download-complete',
+                itemId: id
+            });
         }
         
         //创建文件夹

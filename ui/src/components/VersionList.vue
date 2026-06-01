@@ -41,12 +41,22 @@
               <!-- Available -->
               <template v-if="!ver.dirPath">
                 <span class="badge badge-available">未安装</span>
-                <button class="btn btn-primary" @click="changeStatus(ver)" :aria-label="'下载 ' + ver.version" v-loading="changeLoading">下载</button>
+                <button v-if="!downloadingMap[ver.id]" class="btn btn-primary" @click="changeStatus(ver)" :aria-label="'下载 ' + ver.version">下载</button>
               </template>
-              <!-- Downloading -->
-              <template v-if="ver.status === 'downloading'">
-                <div class="progress-wrap"><div :class="['progress-bar', { animating: true }]" :style="{ width: ver.progress + '%' }"></div></div>
-                <span class="progress-text">{{ ver.progress }}%</span>
+              <!-- Downloading (WebSocket real-time progress) -->
+              <template v-if="downloadingMap[ver.id] || ver.status === 'downloading'">
+                <div class="progress-wrap">
+                  <div class="progress-bar animating" :style="{ width: (downloadingMap[ver.id]?.progress ?? ver.progress ?? 0) + '%' }"></div>
+                </div>
+                <span class="progress-text">
+                  <template v-if="downloadingMap[ver.id]">
+                    {{ (downloadingMap[ver.id]?.progress ?? 0).toFixed(1) }}%
+                    <span class="speed-text">{{ formatSpeed(downloadingMap[ver.id]?.speed) }}</span>
+                  </template>
+                  <template v-else>
+                    {{ ver.progress }}%
+                  </template>
+                </span>
               </template>
               <!-- Installed -->
               <template v-if="!!ver.dirPath && !ver.enable">
@@ -77,14 +87,63 @@
 import api,{ type EnvItem } from '@/apis/EnvItem.ts';
 import groupApi from '@/apis/EnvGroup.ts';
 import { useRequest } from 'alova/client';
-import { computed, onMounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue';
 import { type EnvGroup } from "@/apis/EnvGroup";
+import { getWsManager } from '@/comm/websocket';
+import type { DownloadProgress, DownloadComplete, DownloadError } from '@/comm/websocket';
 
 const props = defineProps<{
   currentEnv:EnvGroup
 }>()
 
 defineEmits(['download', 'activate'])
+
+/* ── WebSocket 实时下载进度 ── */
+
+interface DownloadingInfo {
+  progress: number
+  speed: number
+}
+
+const downloadingMap = reactive<Record<string, DownloadingInfo>>({})
+
+function formatSpeed(speed?: number): string {
+  if (speed == null) return ''
+  if (speed < 1024) return `${speed} B/s`
+  if (speed < 1024 * 1024) return `${(speed / 1024).toFixed(1)} KB/s`
+  return `${(speed / (1024 * 1024)).toFixed(1)} MB/s`
+}
+
+function setupWebSocket() {
+  const ws = getWsManager()
+
+  ws.on('progress', (data: DownloadProgress) => {
+    downloadingMap[data.itemId] = {
+      progress: data.percentage,
+      speed: data.speed,
+    }
+  })
+
+  ws.on('complete', (data: DownloadComplete) => {
+    delete downloadingMap[data.itemId]
+    loadData()
+  })
+
+  ws.on('error', (data: DownloadError) => {
+    delete downloadingMap[data.itemId]
+    ElMessage.error(`下载失败: ${data.error}`)
+    loadData()
+  })
+
+  ws.connect()
+}
+
+function teardownWebSocket() {
+  const ws = getWsManager()
+  ws.off('progress')
+  ws.off('complete')
+  ws.off('error')
+}
 
 watch(()=>props.currentEnv,()=>{
     loadData()
@@ -109,25 +168,33 @@ async function handleDelete(row: EnvItem,index:number) {
   })
 }
 
-async function changeStatus(row: EnvItem, enableParam?: boolean) {
+async function changeStatus(row: EnvItem) {
   try {
     // 如果没有安装目录，走下载流程（后端根据行信息处理）
     if (!row.dirPath) {
-      await sendChangeStatus(row as EnvItem);
-    } else {
-      const enable = typeof enableParam === 'boolean' ? enableParam : !row.enable;
-      await sendChangeStatus({ id: row.id, enable });
-    }
+      // 立即标记为下载中，等待 WebSocket 推送进度
+      downloadingMap[row.id] = { progress: 0, speed: 0 }
+    } 
+    await sendChangeStatus({ id: row.id, enable: !row.enable } as EnvItem);
     loadData();
     ElMessage.success("操作成功");
   } catch (e) {
+    // 如果下载启动失败，清除下载状态
+    if (!row.dirPath) {
+      delete downloadingMap[row.id]
+    }
     ElMessage.error("操作失败");
   }
 }
 
 onMounted(() => {
     props.currentEnv && loadData();
-});
+    setupWebSocket()
+})
+
+onUnmounted(() => {
+  teardownWebSocket()
+})
 
 const installedCount = computed(() => {
   if (!props.currentEnv) return 0
@@ -211,5 +278,12 @@ const filteredData = computed(() => {
 .panel-search .search-clear:hover {
   background: color-mix(in srgb, var(--fg) 20%, transparent);
   color: var(--fg);
+}
+
+.speed-text {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 4px;
+  opacity: 0.75;
 }
 </style>

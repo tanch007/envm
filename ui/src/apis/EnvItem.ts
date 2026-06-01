@@ -16,6 +16,12 @@ export type EnvItem = Partial<{
     dirPath: string;
     /** 版本 */
     version: string;
+    /** 日期 */
+    date: string;
+    /** 状态（downloading / installed 等） */
+    status?: string;
+    /** 下载进度 0-100 */
+    progress?: number;
     /** 是否启用 */
     enable: boolean
 }>
