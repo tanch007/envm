@@ -1,9 +1,10 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { sql } from 'drizzle-orm';
+import { sql,count } from 'drizzle-orm';
 import { envGroups, type EnvGroup, type NewEnvGroup } from "./EnvGroup";
 import { envItems, type EnvItem, type NewEnvItem } from "./EnvItem";
 import path from "path";
 import fs from "fs-extra";
+import { initGroups } from "./init";
 
 const envmDataDir = path.join(process.cwd(),'../', "envm-data","envm.db");
 const dir = path.dirname(envmDataDir);
@@ -61,6 +62,14 @@ async function initEntities(): Promise<void> {
         sort: { name: 'sort', type: 'INTEGER', notNull: true },
         createdAt: { name: 'createdAt', type: 'INTEGER', notNull: true },
     });
+
+    const result = await db.select({ count: count() }).from(envGroups);
+    const total = result[0].count;
+    if (total === 0) {
+        // 初始化默认环境组数据
+        await db.insert(envGroups).values(initGroups)
+        console.log("Default groups initialized");
+    }
 
     console.log("Entities initialized");
 }

@@ -1,6 +1,5 @@
 import fs from "fs-extra";
 import { existsSync } from "node:fs";
-import { ArchiveReader, libarchiveWasm } from "libarchive-wasm";
 import path, { join } from "node:path";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
@@ -22,7 +21,8 @@ export async function createSymlink(source: string, target: string) {
 export async function folderExists(folderPath: string): Promise<boolean> {
     try {
         await fs.access(folderPath, fs.constants.F_OK);
-        return true;
+        let list = await fs.readdir(folderPath)
+        return list.length > 0;
     } catch {
         return false;
     }

@@ -126,13 +126,13 @@ function setupWebSocket() {
 
   ws.on('complete', (data: DownloadComplete) => {
     delete downloadingMap[data.itemId]
-    loadData()
+    setTimeout(()=>{loadData()}, 500)
   })
 
   ws.on('error', (data: DownloadError) => {
     delete downloadingMap[data.itemId]
     ElMessage.error(`下载失败: ${data.error}`)
-    loadData()
+    setTimeout(()=>{loadData()}, 500)
   })
 
   ws.connect()
@@ -176,8 +176,6 @@ async function changeStatus(row: EnvItem) {
       downloadingMap[row.id] = { progress: 0, speed: 0 }
     } 
     await sendChangeStatus({ id: row.id, enable: !row.enable } as EnvItem);
-    loadData();
-    ElMessage.success("操作成功");
   } catch (e) {
     // 如果下载启动失败，清除下载状态
     if (!row.dirPath) {
@@ -185,6 +183,8 @@ async function changeStatus(row: EnvItem) {
     }
     ElMessage.error("操作失败");
   }
+  
+  loadData()
 }
 
 onMounted(() => {

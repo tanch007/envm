@@ -27,7 +27,8 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
                 consoleLog: true,
                 overWriteFile: true,
                 method: "simple",
-                downloadFolder: donloadDir
+                downloadFolder: donloadDir,
+                timeout: 60000
             });
 
             // 监听下载进度并通过 WebSocket 推送
@@ -51,8 +52,8 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
                     error: typeof data?.error === 'string' ? data.error : (data?.error as Error)?.message || '下载失败'
                 });
             });
-
-            await downloadManager.download(entity.urlPath);
+            console.log(`download file:${entity.fileName} url:${entity.urlPath}`)
+            await downloadManager.download(entity.urlPath,entity.fileName);
 
             // 下载完成推送
             wsService.broadcast({
@@ -73,7 +74,9 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
 
     if (status) {
         // 设置软连接
-        await comm.createSymlink(fullDir, envDir);
+        let binPath = path.join(fullDir, 'bin');
+        let sourcePath = fs.pathExistsSync(binPath) ? binPath : fullDir;
+        await comm.createSymlink(sourcePath, envDir);
         // 检查全局变量是否存在
         comm.setEnv(envDir);
     } else {

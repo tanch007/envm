@@ -18,7 +18,8 @@
     "prebuild": "node scripts/update-html-title.js && electron-vite build",
     "build": "electron-builder --config electron-builder.ts --dir ",
     "build:win": "npm run prebuild && electron-builder --config electron-builder.ts --win",
-    "build:uiwin":"cd ../ui && yarn build --outDir ../app/public && cd ../app && npm run build:win"
+    "build:ui": "cd ../ui && yarn build --outDir ../app/public && cd ../app",
+    "build:winui":"run build:ui && npm run build:win"
   },
   "dependencies": {
     "7zip-min": "^3.0.1",

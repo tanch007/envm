@@ -18,7 +18,7 @@ app.get("/group/:groupId", async (c) => {
  */
 app.post("/changeStatus", async (c) => {
     const body = await c.req.json<{ id: string; enable: boolean }>();
-    await changeStatus(body.id, body.enable);
+    changeStatus(body.id, body.enable);
     return c.json({ success: true });
 });
 

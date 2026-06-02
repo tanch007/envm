@@ -72,13 +72,13 @@ export async function getGroupEnvList(id: string) {
   ${config?.getListScript || '()=>{}'}
   )`);
   
-    const result = await fun()(config, { fetch, log: console.log, moment, radashi, versionCompare }) as { url: string; version: string }[];
+    const result = await fun()(config, { fetch, log: console.log, moment, radashi, versionCompare }) as { url: string; version: string,fileName?:string,envPath?:string }[];
 
     // 删除该组下所有旧的环境变量项
     await db.delete(envItems).where(eq(envItems.groupId, id));
 
     const items: NewEnvItem[] = result.map(item => {
-        const fileName = item.url.split('/').pop() || '';
+        const fileName =item.fileName || item.url.split('/').pop() || '';
         return {
             id: nanoid(),
             groupId: id,
