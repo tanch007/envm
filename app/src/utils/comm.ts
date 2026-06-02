@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import path, { join } from "node:path";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import _7z from "7zip-min"
+import _7z from "./7z-min"
 
 const execAsync = promisify(exec);
 
@@ -36,6 +36,8 @@ export async function folderExists(folderPath: string): Promise<boolean> {
  */
 export async function extractTo(archivePath: string, targetDir: string) {
     //修复7zip-min 在 asar 包内无法找到 7z.exe 的问题
+    const isUsingAsar = 'electron' in process.versions && process.argv.length > 1 && process.argv[1].includes('app.asar');
+    console.log('isUsingAsar',isUsingAsar,'electron' in process.versions,process.argv.length,process.argv[1])
     if(!process.env.VSCODE_DEBUG){
         process.argv[1]='app.asar'
         console.log(`process.argv`,process.argv.join(','))

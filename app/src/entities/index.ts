@@ -67,7 +67,8 @@ async function initEntities(): Promise<void> {
     const total = result[0].count;
     if (total === 0) {
         // 初始化默认环境组数据
-        await db.insert(envGroups).values(initGroups)
+        const data = initGroups.map(group =>({...group,...{ getListScript: Buffer.from(group.getListScript as string).toString('base64') }}));
+        await db.insert(envGroups).values(data)
         console.log("Default groups initialized");
     }
 

@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { envGroups, envItems, db, type EnvGroup, type NewEnvGroup, type NewEnvItem } from "../entities";
 import moment from "moment";
 import * as radashi from "radashi";
-import { versionCompare } from "../comm";
+import { versionCompare } from "../utils/comm";
 
 /**
  * 保存环境变量组，根据是否存在 id 判断是新增还是更新

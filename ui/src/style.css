@@ -389,7 +389,7 @@ html, body, #app {
   font-family: var(--font-mono);
   color: var(--muted);
   letter-spacing: 0.02em;
-  width: 42px;
+  width: 120px;
   text-align: right;
 }
 

@@ -1,0 +1,339 @@
+import { promisify } from 'util';
+import { spawn } from 'child_process';
+import { path7za } from '7zip-bin';
+
+/**
+ * Get the default binary path.
+ * @returns {string}
+ */
+function getDefaultBinaryPath() {
+  return process.env.VSCODE_DEBUG ?   path7za : path7za.replace('app.asar', 'app.asar.unpacked');
+}
+
+/**
+ * @typedef {Object} ConfigSettings
+ * @property {string | undefined} binaryPath - path to binary `7za` or `7za.exe`
+ */
+
+// Default config settings
+const configSettings = {
+  binaryPath: getDefaultBinaryPath(),
+};
+
+/**
+ * Get current configuration settings.
+ * @returns {ConfigSettings} cfg - configuration settings.
+ */
+function getConfig() {
+  // spread operator is good until the structure does not contain nested objects
+  return { ...configSettings };
+}
+
+/**
+ * Change configuration settings.
+ * @param {ConfigSettings} cfg - configuration settings.
+ */
+function config(cfg) {
+  if (cfg === null || typeof cfg !== 'object' || Array.isArray(cfg)) {
+    throw new TypeError('config expects an object');
+  }
+  if (Object.prototype.hasOwnProperty.call(cfg, 'binaryPath')) {
+    if (typeof cfg.binaryPath !== 'string' || cfg.binaryPath.trim().length === 0) {
+      throw new TypeError('config.binaryPath must be a non-empty string');
+    }
+  }
+
+  Object.assign(configSettings, cfg);
+}
+
+/**
+ * @typedef {Object} ListItem
+ * @property {string} name - path to file/dir
+ * @property {string} [size] - size
+ * @property {string} [compressed] - packed size
+ * @property {string} [date] - modified date
+ * @property {string} [time] - modified time
+ * @property {string} [attr] - attributes
+ * @property {string} [crc] - CRC
+ * @property {string} [encrypted] - encrypted
+ * @property {string} [method] - compression method
+ * @property {string} [block] - block
+ */
+
+/**
+ * @typedef {Error} SevenZipMinError
+ * @extends {Error}
+ * @property {string} [stdout] - stdout output
+ * @property {string} [stderr] - stderr output
+ * @property {number|string} [code] - exit code
+ */
+
+
+/**
+ * @callback callbackFn
+ * @param {SevenZipMinError|null} err - error object. Will be `null` if no errors.
+ * @param {string} [output] - output of the 7z command execution if no errors
+ * @returns {void}
+ */
+
+/**
+ * @callback listCallbackFn
+ * @param {SevenZipMinError|null} err - error object. Will be `null` if no errors.
+ * @param {ListItem[]} [output] - result of list command execution if no errors
+ * @returns {void}
+ */
+
+/**
+ * Helper to handle optional destination path and callback adjustment.
+ * @param {string[]} args - The arguments array to push to.
+ * @param {string|function} destPathOrCb - Destination path or callback.
+ * @param {function} [cb] - Callback.
+ * @returns {function} The resolved callback.
+ */
+function resolveOptionalDest(args, destPathOrCb, cb) {
+  let destPath = destPathOrCb;
+  if (typeof destPathOrCb === 'function' && cb === undefined) {
+    cb = destPathOrCb;
+    destPath = undefined;
+  }
+  if (destPath) {
+    args.push('-o' + destPath);
+  }
+  return cb;
+}
+
+/**
+ * Unpack archive.
+ * @param {string} pathToArch - path to archive you want to unpack.
+ * @param {string|callbackFn} destPathOrCb - Either:
+ * - (i) destination path, where to unpack.
+ * - (ii) callback function, in case no destPath to be specified
+ * @param {callbackFn} [cb] - callback function. Will be called once unpack is done. If no errors, first parameter will contain `null`
+ * @returns {Promise<string>} Promise that resolves with stdout if no callback is provided.
+ *
+ * NOTE: Providing a destination path is optional. In case it is not provided, cb is expected as the second argument to function.
+ */
+function unpack(pathToArch, destPathOrCb, cb) {
+  const args = ['x', pathToArch, '-y'];
+  cb = resolveOptionalDest(args, destPathOrCb, cb);
+  run(args, cb);
+}
+
+/**
+ * Unpack a specific file (or files) from an archive, recursively.
+ * @param {string} pathToArch - path to archive you want to unpack.
+ * @param {string[]} filesToUnpack - array of file/directory names to unpack from the archive.
+ * @param {string|callbackFn} destPathOrCb - Either:
+ * - (i) destination path, where to unpack.
+ * - (ii) callback function, in case no destPath to be specified
+ * @param {callbackFn} [cb] - callback function. Will be called once unpack is done. If no errors, first parameter will contain `null`
+ * @returns {Promise<string>} Promise that resolves with stdout if no callback is provided.
+ *
+ * NOTE: Providing a destination path is optional. In case it is not provided, cb is expected as the third argument to function.
+ */
+function unpackSome(pathToArch, filesToUnpack, destPathOrCb, cb) {
+  const args = ['x', pathToArch, '-y', '-r'];
+  cb = resolveOptionalDest(args, destPathOrCb, cb);
+
+  if (!Array.isArray(filesToUnpack)) {
+    return cb(new TypeError('filesToUnpack must be an array'));
+  }
+
+  if (filesToUnpack.length === 0) {
+    return cb(new TypeError('No files to unpack specified'));
+  }
+  // if a filename in filesToUnpack starts with a `-` (e.g. -file.txt), 7z might interpret it as a switch
+  // add the end-of-switches delimiter `--` before the file list
+  run(args.concat('--', filesToUnpack), cb);
+}
+
+/**
+ * Pack file or folder to archive.
+ * @param {string} pathToSrc - path to file or folder you want to compress.
+ * @param {string} pathToArch - path to archive you want to create.
+ * @param {callbackFn} [cb] - callback function. Will be called once pack is done. If no errors, first parameter will contain `null`.
+ * @returns {Promise<string>} Promise that resolves with stdout if no callback is provided.
+ */
+function pack(pathToSrc, pathToArch, cb) {
+  run(['a', pathToArch, pathToSrc], cb);
+}
+
+/**
+ * Get an array with compressed file contents.
+ * @param {string} pathToArch - path to file its content you want to list.
+ * @param {listCallbackFn} [cb] - callback function. Will be called once list is done. If no errors, first parameter will contain `null`.
+ * @returns {Promise<ListItem[]>} Promise that resolves with the list of items if no callback is provided.
+ */
+function list(pathToArch, cb) {
+  run(['l', '-slt', '-ba', '-sccUTF-8', pathToArch], cb);
+}
+
+/**
+ * Run 7za with parameters specified in `paramsArr`.
+ * @param {string[]} paramsArr - array of parameter. Each array item is one parameter.
+ * @param {callbackFn} [cb] - callback function. Will be called once command is done. If no errors, first parameter will contain `null`. If no output, second parameter will be `null`.
+ * @returns {Promise<string>} Promise that resolves with stdout if no callback is provided.
+ */
+function cmd(paramsArr, cb) {
+  run(paramsArr, cb);
+}
+
+/**
+ * Executes a command using the 7-zip binary with the given arguments and callback for handling results.
+ *
+ * @param {string[]} args - The array of arguments to pass to the 7-zip binary.
+ * @param {Function} cb - The callback function to execute upon completion. It receives parameters:
+ * - `err`: An error object if an error occurred, otherwise `null`.
+ * - `result`: The stdout output or parsed result if the command was successful.
+ *   In case of errors, detailed error information is provided.
+ * @return {void}
+ */
+function run(args, cb) {
+  cb = onceify(cb);
+  const proc = spawn(configSettings.binaryPath, args, { windowsHide: true });
+  const stdoutChunks = [];
+  const stderrChunks = [];
+  let spawnError;
+
+  proc.on('error', (err) => {
+    spawnError = err;
+    cb(err);
+  });
+
+  proc.stdout.on('data', (chunk) => {
+    stdoutChunks.push(chunk);
+  });
+
+  proc.stderr.on('data', (chunk) => {
+    stderrChunks.push(chunk);
+  });
+
+  proc.on('close', (code) => {
+    if (spawnError) return;
+
+    const stdout = stdoutChunks.length ? Buffer.concat(stdoutChunks).toString() : '';
+    const stderr = stderrChunks.length ? Buffer.concat(stderrChunks).toString() : '';
+
+    // 7zip exited with an error code
+    if (code !== 0) {
+      return cb(createError(`7-zip exited with code ${code}.`, stdout, stderr, code));
+    }
+
+    // Successful execution:
+    // The command was 'list', parse the stdout
+    if (args[0] === 'l') {
+      try {
+        return cb(null, parseListOutput(stdout));
+      } catch (parseError) {
+        return cb(createError(`Failed to parse 7-zip list output: ${parseError.message}`, stdout, stderr, code));
+      }
+    }
+    // all other cases of successful execution
+    cb(null, stdout);
+  });
+}
+
+/**
+ * Creates a standard SevenZipMinError.
+ * @param {string} baseMessage - The base error message.
+ * @param {string} stdout - The stdout output.
+ * @param {string} stderr - The stderr output.
+ * @param {number|string} [code] - The exit code of the 7z process.
+ * @returns {Error} err - The created error object.
+ */
+function createError(baseMessage, stdout, stderr, code) {
+  const err = new Error(baseMessage);
+  err.stdout = stdout;
+  err.stderr = stderr;
+  if (code !== undefined) {
+    err.code = code;
+  }
+  return err;
+}
+
+// http://stackoverflow.com/questions/30234908/javascript-v8-optimisation-and-leaking-arguments
+// javascript V8 optimisation and “leaking arguments”
+// making callback to be invoked only once
+function onceify(fn) {
+  if (typeof fn !== 'function') {
+    return function () {};
+  }
+  let called = false;
+  return function (...args) {
+    if (called) return;
+    called = true;
+    fn.apply(this, args);
+  };
+}
+
+function parseListOutput(str) {
+  if (typeof str !== 'string' || !str.length) return [];
+  str = str.replace(/(\r\n|\n|\r)/gm, '\n');
+  const items = str.split(/^\s*$/m);
+  const res = [];
+  const LIST_MAP = {
+    Path: 'name',
+    Size: 'size',
+    'Packed Size': 'compressed',
+    Attributes: 'attr',
+    Modified: 'dateTime',
+    CRC: 'crc',
+    Method: 'method',
+    Block: 'block',
+    Encrypted: 'encrypted',
+  };
+
+  if (!items.length) return [];
+
+  for (let item of items) {
+    if (!item.length) continue;
+    const obj = {};
+    const lines = item.split('\n');
+    if (!lines.length) continue;
+    for (let line of lines) {
+      // Split by first " = " occurrence. This will also add an empty 3rd elm to the array. Just ignore it
+      const data = line.split(/ = (.*)/);
+      if (data.length !== 3) continue;
+      const name = data[0].trim();
+      const val = data[1].trim();
+      if (LIST_MAP[name]) {
+        if (LIST_MAP[name] === 'dateTime') {
+          const dtArr = val.split(/\s+/);
+          if (dtArr.length >= 2) {
+            obj['date'] = dtArr[0];
+            obj['time'] = dtArr[1];
+          }
+        } else {
+          obj[LIST_MAP[name]] = val;
+        }
+      }
+    }
+    if (Object.keys(obj).length) {
+      // Guarantee that the item always have a `name` property
+      if (!obj.name) obj.name = '';
+      res.push(obj);
+    }
+  }
+  return res;
+}
+
+function universalCall(fn) {
+  return function (...args) {
+    const cb = args.length >= 1 && typeof args[args.length - 1] === 'function';
+    if (cb) {
+      return fn.apply(this, args);
+    } else {
+      return promisify(fn).apply(this, args);
+    }
+  };
+}
+
+export default {
+  getConfig,
+  config,
+  unpack: universalCall(unpack),
+  unpackSome: universalCall(unpackSome),
+  pack: universalCall(pack),
+  list: universalCall(list),
+  cmd: universalCall(cmd),
+}

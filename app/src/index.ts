@@ -34,7 +34,7 @@ function createWindow(): void {
     mainWindow.loadURL(`http://localhost:${info.port}`)
   })
 
-  // mainWindow.webContents.openDevTools()
+  process.argv.includes('--dev') && mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {

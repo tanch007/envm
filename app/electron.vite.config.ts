@@ -12,7 +12,7 @@ export default defineConfig({
           minify:true,
           codeSplitting:false
         },
-        external:['electron','better-sqlite3','7zip-min']
+        external:['electron','better-sqlite3','7zip-bin']
       }
     }
   },

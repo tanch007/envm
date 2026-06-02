@@ -1,7 +1,7 @@
 import { eq, ne } from 'drizzle-orm';
 import { nanoid } from "nanoid";
 import { envGroups, envItems, db, type EnvGroup, type EnvItem } from "../entities";
-import * as comm from "../comm";
+import * as comm from "../utils/comm";
 import { DownloadManager }  from "node-downloader-manager";
 import path from "node:path";
 import fs from "fs-extra";
@@ -16,21 +16,22 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
     const envDir = path.join(envmDataDir, `/env/${group?.name}`);
     const donloadDir = path.join(envmDataDir, "downloads");
     const downloadFilePath = path.join(donloadDir, entity.fileName);
+    const maxTimeout = 2 ** 31 - 1;
 
     if (status && !await comm.folderExists(fullDir)) {
         // 下载文件
         if (!entity.urlPath) {
             throw new Error("URL path is empty");
         }
-        if(!await comm.folderExists(downloadFilePath)){
+        if(!fs.existsSync(downloadFilePath)){
             const downloadManager = new DownloadManager({
                 consoleLog: true,
                 overWriteFile: true,
                 // method: "simple",
-                stream:true,
-                downloadFolder: donloadDir,
-                timeout: 60000,
                 retries:1,
+                stream:true,
+                timeout: maxTimeout,
+                downloadFolder: donloadDir,
                 getFileName: ()=>entity.fileName,
             });
 
@@ -38,6 +39,7 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
             downloadManager.on('progress', (data) => {
                 const progressStr = data?.progress?.replace('%', '') || '0';
                 const percentage = parseFloat(progressStr);
+                console.log(`Download progress: ${id} ${data?.fileName} - ${percentage}%`);
                 wsService.broadcast({
                     type: 'download-progress',
                     itemId: id,
@@ -49,6 +51,7 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
             });
 
             downloadManager.on('error', (data) => {
+                console.log(`Download error: ${id} ${data?.fileName} - ${data?.error}`);
                 wsService.broadcast({
                     type: 'download-error',
                     itemId: id,
@@ -57,7 +60,7 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
             });
 
             downloadManager.on('complete',async (data)=>{
-            
+                console.log(`Download complete: ${id} ${data?.fileName}`);
                 //创建文件夹
                 await fs.mkdir(fullDir, { recursive: true });
                 // 解压文件
@@ -93,15 +96,15 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
 }
 
 async function handleDownloadComplete(id: string, status: boolean, envDir: string,fullDir: string) {
+    let binPath = path.join(fullDir, 'bin');
+    let sourcePath = fs.pathExistsSync(binPath) ? path.join(envDir, 'bin') : envDir;
     if (status) {
         // 设置软连接
-        let binPath = path.join(fullDir, 'bin');
-        let sourcePath = fs.pathExistsSync(binPath) ? binPath : fullDir;
-        await comm.createSymlink(sourcePath, envDir);
+        await comm.createSymlink(fullDir, envDir);
         // 检查全局变量是否存在
-        comm.setEnv(envDir);
+        comm.setEnv(sourcePath);
     } else {
-        comm.rmEnv(envDir);
+        comm.rmEnv(sourcePath);
     }
 
     // 先将同组其他项设为禁用，再将当前项设为指定状态

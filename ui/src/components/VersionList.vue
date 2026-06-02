@@ -105,7 +105,7 @@ interface DownloadingInfo {
   speed: number
 }
 
-let downloadingMap = reactive<Record<string, DownloadingInfo>>({})
+const downloadingMap = ref<Record<string, DownloadingInfo>>({})
 
 function formatSpeed(speed?: number): string {
   if (speed == null) return ''
@@ -118,19 +118,19 @@ function setupWebSocket() {
   const ws = getWsManager()
 
   ws.on('progress', (data: DownloadProgress) => {
-    downloadingMap[data.itemId] = {
+    downloadingMap.value[data.itemId] = {
       progress: data.percentage,
       speed: data.speed,
     }
   })
 
   ws.on('complete', (data: DownloadComplete) => {
-    delete downloadingMap[data.itemId]
+    delete downloadingMap.value[data.itemId]
     setTimeout(()=>{loadData()}, 500)
   })
 
   ws.on('error', (data: DownloadError) => {
-    delete downloadingMap[data.itemId]
+    delete downloadingMap.value[data.itemId]
     ElMessage.error(`下载失败: ${data.error}`)
     setTimeout(()=>{loadData()}, 500)
   })
@@ -146,7 +146,7 @@ function teardownWebSocket() {
 }
 
 watch(()=>props.currentEnv,()=>{
-    downloadingMap={}
+    downloadingMap.value={}
     loadData()
 })
 const { data,loading,send:loadData } = useRequest(() => api.getItems(props.currentEnv.id), { immediate: false,initialData:[] })
@@ -174,13 +174,13 @@ async function changeStatus(row: EnvItem) {
     // 如果没有安装目录，走下载流程（后端根据行信息处理）
     if (!row.dirPath) {
       // 立即标记为下载中，等待 WebSocket 推送进度
-      downloadingMap[row.id] = { progress: 0, speed: 0 }
+      downloadingMap.value[row.id] = { progress: 0, speed: 0 }
     } 
     await sendChangeStatus({ id: row.id, enable: !row.enable } as EnvItem);
   } catch (e) {
     // 如果下载启动失败，清除下载状态
     if (!row.dirPath) {
-      delete downloadingMap[row.id]
+      delete downloadingMap.value[row.id]
     }
     ElMessage.error("操作失败");
   }

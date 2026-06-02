@@ -6,79 +6,14 @@ export const initGroups:NewEnvGroup[] = [{
     id:nanoid(),
     createdAt: Date.now(),
     name: "nodejs",
-    getListScript:`/**
- * 获取环境仓库列表数据
- * @param { ConfigType } config 环境配置
- * @param { UtilsType } utils 工具函数集合
- * @param { ResultType[] } 列表数据
- */
-async (config,utils)=>{
-    const list = await utils.fetch(config.routeUrl).then(res=>res.json())
-    const verTexts = "18,22,24,25".split(',').map(a=>'v'+a)
-    let versions = list.filter(a=>a.type=='dir' && a.category=='node' && verTexts.includes(a.name.split('.')[0]))
-    //移除v,/
-    versions.forEach(item=>item.name=item.name.replace(/[v/]/g, ''))
-    //版本排序
-    const verList = versions.map(a=>a.name).sort(utils.versionCompare).reverse()
-
-    let result = []
-    verList.forEach((ver,index)=>{
-        let verItem = versions.find(a=>a.name==ver)
-        let name = verItem.name
-        let url = verItem.url
-        result.push({ version:name, sort:index ,url:\`\${url}node-v\${name}-win-x64.zip\` })
-    })
-    return result
-}
-`,
+    getListScript:`Ci8qKgogKiDojrflj5bnjq/looPku5PlupPliJfooajmlbDmja4KICogQHBhcmFtIHsgQ29uZmlnVHlwZSB9IGNvbmZpZyDnjq/looPphY3nva4KICogQHBhcmFtIHsgVXRpbHNUeXBlIH0gdXRpbHMg5bel5YW35Ye95pWw6ZuG5ZCICiAqIEBwYXJhbSB7IFJlc3VsdFR5cGVbXSB9IOWIl+ihqOaVsOaNrgogKi8KYXN5bmMgKGNvbmZpZyx1dGlscyk9PnsKICAgIGNvbnN0IGxpc3QgPSBhd2FpdCB1dGlscy5mZXRjaChjb25maWcucm91dGVVcmwpLnRoZW4ocmVzPT5yZXMuanNvbigpKQogICAgY29uc3QgdmVyVGV4dHMgPSAiMTgsMjIsMjQsMjUiLnNwbGl0KCcsJykubWFwKGE9Pid2JythKQogICAgbGV0IHZlcnNpb25zID0gbGlzdC5maWx0ZXIoYT0+YS50eXBlPT0nZGlyJyAmJiBhLmNhdGVnb3J5PT0nbm9kZScgJiYgdmVyVGV4dHMuaW5jbHVkZXMoYS5uYW1lLnNwbGl0KCcuJylbMF0pKQogICAgLy/np7vpmaR2LC8KICAgIHZlcnNpb25zLmZvckVhY2goaXRlbT0+aXRlbS5uYW1lPWl0ZW0ubmFtZS5yZXBsYWNlKC9bdi9dL2csICcnKSkKICAgIC8v54mI5pys5o6S5bqPCiAgICBjb25zdCB2ZXJMaXN0ID0gdmVyc2lvbnMubWFwKGE9PmEubmFtZSkuc29ydCh1dGlscy52ZXJzaW9uQ29tcGFyZSkucmV2ZXJzZSgpCgogICAgbGV0IHJlc3VsdCA9IFtdCiAgICB2ZXJMaXN0LmZvckVhY2goKHZlcixpbmRleCk9PnsKICAgICAgICBsZXQgdmVySXRlbSA9IHZlcnNpb25zLmZpbmQoYT0+YS5uYW1lPT12ZXIpCiAgICAgICAgbGV0IG5hbWUgPSB2ZXJJdGVtLm5hbWUKICAgICAgICBsZXQgdXJsID0gdmVySXRlbS51cmwKICAgICAgICByZXN1bHQucHVzaCh7IHZlcnNpb246bmFtZSwgc29ydDppbmRleCAsdXJsOmAke3VybH1ub2RlLXYke25hbWV9LXdpbi14NjQuemlwYCB9KQogICAgfSkKICAgIHJldHVybiByZXN1bHQKfQo=`,
 sort: 1,
 routeUrl:'https://registry.npmmirror.com/-/binary/node/'
 },{
     id:nanoid(),
     createdAt: Date.now(),
     name: "java",
-    getListScript:`/**
- * 获取环境仓库列表数据
- * @param { ConfigType } config 环境配置
- * @param { UtilsType } utils 工具函数集合
- * @param { ResultType[] } 列表数据
- */
-async (config,utils)=>{
-
-    function parseDirectoryListing(htmlString) {
-        const results = [];
-        // 正则表达式匹配 href 和时间
-        const regex = /<a href="([^"]+)"[^>]*>.*?<\/a>\s+(\d{2}-[A-Z][a-z]{2}-\d{4} \d{2}:\d{2})/g;
-        
-        let match;
-        while ((match = regex.exec(htmlString)) !== null) {
-            results.push({
-                name: match[1].replace(/\/$/, ''),
-                time: match[2]
-            });
-        }
-        
-        return results;
-    }
-
-    const htmlText = await utils.fetch(config.routeUrl).then(res=>res.text())
-    const list = parseDirectoryListing(htmlText)
-    const verTexts = "10,11,16,18,24".split(',')
-    let versions = list.filter(a=>verTexts.includes(a.name.split('.')[0]))
-    //版本排序
-    const verList = versions.map(a=>a.name).sort(utils.versionCompare).reverse()
-
-    let result = []
-    verList.forEach((ver,index)=>{
-        let verItem = versions.find(a=>a.name==ver)
-        let name = verItem.name
-        let url = \`\${config.routeUrl}/\${verItem.name}/openjdk-\${verItem.name}_windows-x64_bin.zip\`
-        result.push({ version:name, sort:index ,url })
-    })
-    return result
-}
-
-`,
+    getListScript:`Ci8qKgogKiDojrflj5bnjq/looPku5PlupPliJfooajmlbDmja4KICogQHBhcmFtIHsgQ29uZmlnVHlwZSB9IGNvbmZpZyDnjq/looPphY3nva4KICogQHBhcmFtIHsgVXRpbHNUeXBlIH0gdXRpbHMg5bel5YW35Ye95pWw6ZuG5ZCICiAqIEBwYXJhbSB7IFJlc3VsdFR5cGVbXSB9IOWIl+ihqOaVsOaNrgogKi8KYXN5bmMgKGNvbmZpZyx1dGlscyk9PnsKCiAgICBmdW5jdGlvbiBwYXJzZURpcmVjdG9yeUxpc3RpbmcoaHRtbFN0cmluZykgewogICAgICAgIGNvbnN0IHJlc3VsdHMgPSBbXTsKICAgICAgICAvLyDmraPliJnooajovr7lvI/ljLnphY0gaHJlZiDlkozml7bpl7QKICAgICAgICBjb25zdCByZWdleCA9IC88YSBocmVmPSIoW14iXSspIltePl0qPi4qPzxcL2E+XHMrKFxkezJ9LVtBLVpdW2Etel17Mn0tXGR7NH0gXGR7Mn06XGR7Mn0pL2c7CiAgICAgICAgCiAgICAgICAgbGV0IG1hdGNoOwogICAgICAgIHdoaWxlICgobWF0Y2ggPSByZWdleC5leGVjKGh0bWxTdHJpbmcpKSAhPT0gbnVsbCkgewogICAgICAgICAgICByZXN1bHRzLnB1c2goewogICAgICAgICAgICAgICAgbmFtZTogbWF0Y2hbMV0ucmVwbGFjZSgvXC8kLywgJycpLAogICAgICAgICAgICAgICAgdGltZTogbWF0Y2hbMl0KICAgICAgICAgICAgfSk7CiAgICAgICAgfQogICAgICAgIAogICAgICAgIHJldHVybiByZXN1bHRzOwogICAgfQoKICAgIGNvbnN0IGh0bWxUZXh0ID0gYXdhaXQgdXRpbHMuZmV0Y2goY29uZmlnLnJvdXRlVXJsKS50aGVuKHJlcz0+cmVzLnRleHQoKSkKICAgIGNvbnN0IGxpc3QgPSBwYXJzZURpcmVjdG9yeUxpc3RpbmcoaHRtbFRleHQpCiAgICBjb25zdCB2ZXJUZXh0cyA9ICIxMSwxNiwxOCwyMSwyNCIuc3BsaXQoJywnKQogICAgbGV0IHZlcnNpb25zID0gbGlzdC5maWx0ZXIoYT0+dmVyVGV4dHMuaW5jbHVkZXMoYS5uYW1lLnNwbGl0KCcuJylbMF0pKQogICAgLy/niYjmnKzmjpLluo8KICAgIGNvbnN0IHZlckxpc3QgPSB2ZXJzaW9ucy5tYXAoYT0+YS5uYW1lKS5zb3J0KHV0aWxzLnZlcnNpb25Db21wYXJlKS5yZXZlcnNlKCkKCiAgICBsZXQgcmVzdWx0ID0gW10KICAgIHZlckxpc3QuZm9yRWFjaCgodmVyLGluZGV4KT0+ewogICAgICAgIGxldCB2ZXJJdGVtID0gdmVyc2lvbnMuZmluZChhPT5hLm5hbWU9PXZlcikKICAgICAgICBsZXQgbmFtZSA9IHZlckl0ZW0ubmFtZQogICAgICAgIGxldCB1cmwgPSBgJHtjb25maWcucm91dGVVcmx9LyR7dmVySXRlbS5uYW1lfS9vcGVuamRrLSR7dmVySXRlbS5uYW1lfV93aW5kb3dzLXg2NF9iaW4uemlwYAogICAgICAgIHJlc3VsdC5wdXNoKHsgdmVyc2lvbjpuYW1lLCBzb3J0OmluZGV4ICx1cmwgfSkKICAgIH0pCiAgICByZXR1cm4gcmVzdWx0Cn0K`,
 sort: 2,
 routeUrl:'https://mirrors.huaweicloud.com/openjdk/'
 }]

@@ -64,9 +64,9 @@ class WsService {
         sentCount++;
       }
     }
-    if (sentCount > 0) {
-      console.log(`[WS] 广播消息: ${message.type}, itemId: ${(message as any).itemId}, 已发送给 ${sentCount} 个客户端`);
-    }
+    // if (sentCount > 0) {
+    //   console.log(`[WS] 广播消息: ${message.type}, itemId: ${(message as any).itemId}, 已发送给 ${sentCount} 个客户端`);
+    // }
   }
 
   /**
