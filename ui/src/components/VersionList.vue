@@ -105,7 +105,7 @@ interface DownloadingInfo {
   speed: number
 }
 
-const downloadingMap = reactive<Record<string, DownloadingInfo>>({})
+let downloadingMap = reactive<Record<string, DownloadingInfo>>({})
 
 function formatSpeed(speed?: number): string {
   if (speed == null) return ''
@@ -146,6 +146,7 @@ function teardownWebSocket() {
 }
 
 watch(()=>props.currentEnv,()=>{
+    downloadingMap={}
     loadData()
 })
 const { data,loading,send:loadData } = useRequest(() => api.getItems(props.currentEnv.id), { immediate: false,initialData:[] })

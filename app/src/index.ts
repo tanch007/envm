@@ -25,7 +25,8 @@ function createWindow(): void {
   app.route("/api/envm/items", envItemRoute);
   app.route("/api/envm/system", systemRoute);
 
-  const port = Math.floor(Math.random() * (65535 - 1024)) + 1024;
+  // const port = Math.floor(Math.random() * (65535 - 1024)) + 1024;
+  const port = 53829
   const server = serve({ fetch: app.fetch, port }, (info) => {
     console.log(`Server running at http://localhost:${info.port}`);
     // 初始化 WebSocket 服务，绑定到同一 HTTP 服务器，监听路径 /api/ws

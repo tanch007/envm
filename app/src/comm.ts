@@ -35,10 +35,10 @@ export async function folderExists(folderPath: string): Promise<boolean> {
  * @param targetDir   目标目录路径，如 './output'
  */
 export async function extractTo(archivePath: string, targetDir: string) {
-
     //修复7zip-min 在 asar 包内无法找到 7z.exe 的问题
-    if(process.argv.length < 1){
+    if(!process.env.VSCODE_DEBUG){
         process.argv[1]='app.asar'
+        console.log(`process.argv`,process.argv.join(','))
     }
 
     let fileDir = path.dirname(archivePath);

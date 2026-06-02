@@ -26,9 +26,12 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
             const downloadManager = new DownloadManager({
                 consoleLog: true,
                 overWriteFile: true,
-                method: "simple",
+                // method: "simple",
+                stream:true,
                 downloadFolder: donloadDir,
-                timeout: 60000
+                timeout: 60000,
+                retries:1,
+                getFileName: ()=>entity.fileName,
             });
 
             // 监听下载进度并通过 WebSocket 推送
@@ -52,26 +55,44 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
                     error: typeof data?.error === 'string' ? data.error : (data?.error as Error)?.message || '下载失败'
                 });
             });
+
+            downloadManager.on('complete',async (data)=>{
+            
+                //创建文件夹
+                await fs.mkdir(fullDir, { recursive: true });
+                // 解压文件
+                await comm.extractTo(downloadFilePath, fullDir);
+
+                //处理下载完成后的逻辑
+                await handleDownloadComplete(id, status, envDir,fullDir);
+
+                // 下载完成推送
+                wsService.broadcast({
+                    type: 'download-complete',
+                    itemId: id
+                });
+            })
+
             console.log(`download file:${entity.fileName} url:${entity.urlPath}`)
             await downloadManager.download(entity.urlPath,entity.fileName);
-
-            // 下载完成推送
-            wsService.broadcast({
-                type: 'download-complete',
-                itemId: id
-            });
         }
         else
         {
-            console.log(`File already exists at ${downloadFilePath}, skipping download.`);
+            //创建文件夹
+            await fs.mkdir(fullDir, { recursive: true });
+            // 解压文件
+            await comm.extractTo(downloadFilePath, fullDir);
         }
-        
-        //创建文件夹
-        await fs.mkdir(fullDir, { recursive: true });
-        // 解压文件
-        await comm.extractTo(downloadFilePath, fullDir);
+    }
+    else
+    {
+        await handleDownloadComplete(id, status, envDir,fullDir);
     }
 
+
+}
+
+async function handleDownloadComplete(id: string, status: boolean, envDir: string,fullDir: string) {
     if (status) {
         // 设置软连接
         let binPath = path.join(fullDir, 'bin');
