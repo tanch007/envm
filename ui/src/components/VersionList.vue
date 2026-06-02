@@ -23,54 +23,10 @@
         <div class="panel-desc">点击左侧「添加环境」按钮创建新的运行时环境</div>
       </template>
     </header>
-    <section class="flex-1 overflow-auto ">
+    <section class="flex-1 overflow-auto " v-loading="loading">
       <section class="version-list" data-component="Version List" data-od-id="version-list">
         <template v-if="currentEnv && data.length > 0">
-          <div
-            v-for="(ver, index) in filteredData"
-            :key="ver.version"
-            :class="['version-item', { 'active-version': ver.enable }]"
-            data-component="Version Item"
-            :data-od-id="'ver-' + currentEnv.id + '-' + ver.version"
-          >
-            <div class="version-info">
-              <div class="version-number">{{ ver.version }}</div>
-              <div class="version-date">{{ ver.date }}</div>
-            </div>
-            <div class="version-status">
-              <!-- Available -->
-              <template v-if="!ver.dirPath && !ver.enable && !downloadingMap[ver.id]">
-                <span class="badge badge-available">未安装</span>
-                <button class="btn btn-primary" @click="changeStatus(ver)" :aria-label="'下载 ' + ver.version">下载</button>
-              </template>
-              <!-- Downloading (WebSocket real-time progress) -->
-              <template v-if="downloadingMap[ver.id] || ver.status === 'downloading'">
-                <div class="progress-wrap">
-                  <div class="progress-bar animating" :style="{ width: (downloadingMap[ver.id]?.progress ?? ver.progress ?? 0) + '%' }"></div>
-                </div>
-                <span class="progress-text">
-                  <template v-if="downloadingMap[ver.id]">
-                    {{ (downloadingMap[ver.id]?.progress ?? 0).toFixed(1) }}%
-                    <span class="speed-text">{{ formatSpeed(downloadingMap[ver.id]?.speed) }}</span>
-                  </template>
-                  <template v-else>
-                    {{ ver.progress }}%
-                  </template>
-                </span>
-              </template>
-              <!-- Installed -->
-              <template v-if="!!ver.dirPath && !ver.enable">
-                <span class="badge badge-installed">已安装</span>
-                <button class="btn"  @click="changeStatus(ver)" :aria-label="'激活 ' + ver.version">激活</button>
-              </template>
-              <!-- Active -->
-              <template v-if="ver.enable">
-                <span class="badge badge-active">当前版本</span>
-                <span style="font-size:13px;color:var(--muted);letter-spacing:0.02em">✓ 已激活</span>
-                <button class="btn" @click="changeStatus(ver)" :aria-label="'取消激活 ' + ver.version" :disabled="changeLoading">取消激活</button>
-              </template>
-            </div>
-          </div>
+          <VersionItem v-for="(ver, index) in filteredData" :ver="ver" :download-status="downloadingMap[ver.id]" :refresh-list="loadData" @download="handleDownload" ></VersionItem>
         </template>
         <template v-else>
           <div class="empty-state" data-component="Empty State" data-od-id="empty-state">
@@ -91,6 +47,8 @@ import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } fr
 import { type EnvGroup } from "@/apis/EnvGroup";
 import { getWsManager } from '@/comm/websocket';
 import type { DownloadProgress, DownloadComplete, DownloadError } from '@/comm/websocket';
+import VersionItem from '@/components/VersionItem.vue'
+
 
 const props = defineProps<{
   currentEnv:EnvGroup
@@ -107,11 +65,11 @@ interface DownloadingInfo {
 
 const downloadingMap = ref<Record<string, DownloadingInfo>>({})
 
-function formatSpeed(speed?: number): string {
-  if (speed == null) return ''
-  if (speed < 1024) return `${speed} B/s`
-  if (speed < 1024 * 1024) return `${(speed / 1024).toFixed(1)} KB/s`
-  return `${(speed / (1024 * 1024)).toFixed(1)} MB/s`
+function handleDownload(item: EnvItem) {
+  downloadingMap.value[item.id] = {
+    progress: 0,
+    speed: 0,
+  }
 }
 
 function setupWebSocket() {
@@ -147,46 +105,16 @@ function teardownWebSocket() {
 
 watch(()=>props.currentEnv,()=>{
     downloadingMap.value={}
+    data.value=[]
     loadData()
 })
 const { data,loading,send:loadData } = useRequest(() => api.getItems(props.currentEnv.id), { immediate: false,initialData:[] })
 const { send:refreshList,loading:refreshLoading,onSuccess } = useRequest(() => groupApi.refreshList(props.currentEnv.id), { immediate: false })
-const { loading:changeLoading,send:sendChangeStatus } = useRequest(api.changeStatus, { immediate: false })
 
 onSuccess(()=>{
     loadData()
     ElMessage.success('获取成功')
 })
-async function handleDelete(row: EnvItem,index:number) {
-  ElMessageBox.confirm("确认删除该项？").then(async () => {
-    try {
-      await api.remove(row.id);
-      ElMessage.success("删除成功");
-      data.value.splice(index,1)
-    } catch (e) {
-      ElMessage.error("删除失败");
-    }
-  })
-}
-
-async function changeStatus(row: EnvItem) {
-  try {
-    // 如果没有安装目录，走下载流程（后端根据行信息处理）
-    if (!row.dirPath) {
-      // 立即标记为下载中，等待 WebSocket 推送进度
-      downloadingMap.value[row.id] = { progress: 0, speed: 0 }
-    } 
-    await sendChangeStatus({ id: row.id, enable: !row.enable } as EnvItem);
-  } catch (e) {
-    // 如果下载启动失败，清除下载状态
-    if (!row.dirPath) {
-      delete downloadingMap.value[row.id]
-    }
-    ElMessage.error("操作失败");
-  }
-  
-  loadData()
-}
 
 onMounted(() => {
     props.currentEnv && loadData();

@@ -23,6 +23,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TsEditorDialog: typeof import('./src/components/TsEditorDialog.vue')['default']
+    VersionItem: typeof import('./src/components/VersionItem.vue')['default']
     VersionList: typeof import('./src/components/VersionList.vue')['default']
   }
   export interface GlobalDirectives {

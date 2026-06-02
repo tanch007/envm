@@ -22,7 +22,6 @@ import api, { type EnvGroup } from "@/apis/EnvGroup";
 import systemApi from "@/apis/System.ts";
 import EnvSidebar from '@/components/EnvSidebar.vue'
 import VersionList from '@/components/VersionList.vue'
-
 const saveDialogRef = shallowRef()
 const currentGroup = ref('')
 const currentEnv = computed(()=>{
