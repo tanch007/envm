@@ -19,7 +19,7 @@
     "build": "electron-builder --config electron-builder.ts --dir ",
     "build:win": "npm run prebuild && electron-builder --config electron-builder.ts --win",
     "build:ui": "cd ../ui && yarn build --outDir ../app/public && cd ../app",
-    "build:winui":"run build:ui && npm run build:win"
+    "build:winui":"npm run build:ui && npm run build:win"
   },
   "dependencies": {
     "7zip-min": "^3.0.1",
