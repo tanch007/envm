@@ -1,0 +1,148 @@
+# ENVM 码云 Gitee Go 流水线配置
+# 在主分支推送或打标签时自动构建并打包 Electron 应用（仅 Windows）
+
+name: build
+displayName: ENVM Build
+
+# 触发器配置
+triggers:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - master
+
+# 全局变量
+variables:
+  - key: NODE_VERSION
+    value: '24'
+
+pipeline:
+  - name: 构建前端
+    displayName: Build UI
+    trigger: auto
+    agent:
+      type: linux
+      image: node:24
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        working-directory: ./ui
+        run: |
+          npm ci --prefer-offline
+
+      - name: 构建 UI
+        working-directory: ./ui
+        run: |
+          npm run build
+
+      - name: 上传前端构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: ./ui/dist/
+
+  - name: 构建 Electron
+    displayName: Build Electron (Windows)
+    trigger: auto
+    needs:
+      - 构建前端
+    agent:
+      type: windows
+      image: node:24
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        run: |
+          choco install nodejs-lts --version=24 --force -y
+          refreshenv
+          node --version
+          npm --version
+
+      - name: 安装依赖
+        working-directory: ./app
+        run: |
+          npm ci --prefer-offline
+
+      - name: 下载前端构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: ui-dist
+          path: ./app/dist/ui/
+
+      - name: 设置 Windows 证书
+        trigger: tag
+        variables:
+          WIN_CERTIFICATE:
+            value: ${{ secrets.WIN_CERTIFICATE }}
+            secret: true
+          WIN_CERTIFICATE_PWD:
+            value: ${{ secrets.WIN_CERTIFICATE_PWD }}
+            secret: true
+        run: |
+          echo "$env:WIN_CERTIFICATE" | base64 --decode > certificate.pfx
+
+      - name: 构建 Electron 安装包
+        working-directory: ./app
+        run: |
+          npm run build:main
+          npx electron-builder --config electron-builder.ts --win --x64
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          CSC_LINK: ${{ contains(gitea.REF, 'refs/tags/v') && './certificate.pfx' || '' }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PWD }}
+
+      - name: 列出构建产物
+        working-directory: ./app
+        run: |
+          Write-Host "=== Build Output ==="
+          Get-ChildItem -Path dist/release/ -Recurse -Name
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: envm-win-x64
+          path: ./app/dist/release/
+
+  - name: 创建 Release
+    displayName: Create Release
+    trigger: tag
+    needs:
+      - 构建 Electron
+    agent:
+      type: linux
+      image: node:24
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-artifacts/
+
+      - name: 列出产物
+        run: |
+          echo "=== All Release Artifacts ==="
+          find ./release-artifacts/ -type f | sort
+
+      - name: 创建 Release
+        uses: gitee-actions/release@v1
+        with:
+          tag_name: ${{ gitea.REF_NAME }}
+          release_name: ENVM ${{ gitea.REF_NAME }}
+          body: |
+            请查看 CHANGELOG.md 获取更新详情。
+          draft: true
+          prerelease: ${{ contains(gitea.REF_NAME, 'alpha') || contains(gitea.REF_NAME, 'beta') || contains(gitea.REF_NAME, 'rc') }}
+          files: |
+            ./release-artifacts/**/*
