@@ -1,4 +1,4 @@
-import { eq, ne } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { envGroups, envItems, db, type EnvGroup, type EnvItem } from "../entities";
 import * as comm from "../utils/comm";
 import { DownloadManager }  from "node-downloader-manager";
@@ -101,13 +101,13 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
     }
     else
     {
-        await handleDownloadComplete(id, status, envDir,fullDir);
+        await handleDownloadComplete(id, group.id,status, envDir,fullDir);
     }
 
 
 }
 
-async function handleDownloadComplete(id: string, status: boolean, envDir: string,fullDir: string) {
+async function handleDownloadComplete(id: string,groupId:string, status: boolean, envDir: string,fullDir: string) {
     let binPath = path.join(fullDir, 'bin');
     let sourcePath = fs.pathExistsSync(binPath) ? path.join(envDir, 'bin') : envDir;
     if (status) {
@@ -120,7 +120,7 @@ async function handleDownloadComplete(id: string, status: boolean, envDir: strin
     }
 
     // 先将同组其他项设为禁用，再将当前项设为指定状态
-    await db.update(envItems).set({ enable: false }).where(ne(envItems.id, id));
+    await db.update(envItems).set({ enable: false }).where(eq(envItems.groupId, groupId));
     await db.update(envItems).set({ enable: status,dirPath: fullDir }).where(eq(envItems.id, id));
 }
 
