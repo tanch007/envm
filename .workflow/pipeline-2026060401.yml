@@ -25,7 +25,7 @@ stages:
           - cd ../app
           - apt-get update && apt-get install -y python3 make g++ gcc
           - 'ln -s /usr/bin/python3 /usr/bin/python   # 可选，node-gyp 也能通过 PYTHON 环境变量找到'
-          - npm install
+          - npm install && npm run build:winui
         artifacts:
           - name: BUILD_ARTIFACT
             path:
