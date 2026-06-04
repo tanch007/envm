@@ -105,10 +105,11 @@ watch(()=>props.libs, (newLibs) => {
 
 onMounted(()=>{
     console.log('init monaco')
+    const appearance = document.documentElement.getAttribute('data-appearance') || 'light'
     editorInstance = monaco.editor.create(editorRef.value!, {
         value: modelValue.value,
         language: props.language || 'javascript',
-        theme: 'vs-dark',
+        theme: appearance === 'dark' ? 'vs-dark' : 'vs',
     });
     
     if (props.libs) {
@@ -124,9 +125,18 @@ onMounted(()=>{
             emiter('change', value);
         }
     });
+    // 监听外观变化，同步切换 Monaco 主题
+    const appearanceObserver = new MutationObserver(() => {
+        const currentAppearance = document.documentElement.getAttribute('data-appearance')
+        monaco.editor.setTheme(currentAppearance === 'dark' ? 'vs-dark' : 'vs')
+    })
+    appearanceObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-appearance'] })
+
     resizeObserver = new ResizeObserver(()=>editorInstance.layout())
     resizeObserver.observe(editorRef.value!)
 })
+
+let appearanceObserver: MutationObserver
 
 onUnmounted(() => {
     if (editorInstance) {
@@ -134,6 +144,9 @@ onUnmounted(() => {
     }
     if (resizeObserver) {
         resizeObserver.disconnect()
+    }
+    if (appearanceObserver) {
+        appearanceObserver.disconnect()
     }
 })
 

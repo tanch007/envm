@@ -5,7 +5,9 @@ import presetIcons from '@unocss/preset-icons'
 
 export default defineConfig({
     presets:[
-        presetWind4(),
+        presetWind4({
+            dark: '[data-appearance="dark"]'
+        }),
         presetIcons({
             collections: {
                 mdi: () => import("@iconify-json/mdi/icons.json").then(i => i.default)

@@ -2,10 +2,10 @@
   <aside class="sidebar" data-component="Environment Sidebar" data-od-id="sidebar">
     <nav class="sidebar-header">
       <div class="sidebar-brand">ENVM</div>
-      <!-- <button class="theme-toggle" @click="$emit('toggle-theme')" aria-label="切换主题" data-component="Theme Toggle" data-od-id="theme-toggle">
+      <button class="theme-toggle" @click="toggle" aria-label="切换主题" data-component="Theme Toggle" data-od-id="theme-toggle">
         <svg v-if="appearance === 'dark'" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41"/></svg>
         <svg v-else viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 10.5A7 7 0 019.5 3 7 7 0 1017 10.5z"/></svg>
-      </button> -->
+      </button>
     </nav>
     <ul class="env-list" data-component="Environment List" data-od-id="env-list">
       <li
@@ -43,14 +43,15 @@
 
 <script setup lang="ts">
 import type { EnvGroup } from "@/apis/EnvGroup";
-import { ref } from "vue";
+import { useTheme } from "@/comm/useTheme";
 
 defineProps<{
   environments:Array<EnvGroup>,
   currentEnv?:EnvGroup
 }>()
-const appearance = ref('light')
 
-defineEmits(['select', 'add', 'edit', 'delete', 'toggle-theme'])
+const { appearance, toggle } = useTheme()
+
+defineEmits(['select', 'add', 'edit', 'delete'])
 
 </script>

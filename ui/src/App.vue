@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+import { useTheme } from "@/comm/useTheme";
+import 'element-plus/theme-chalk/dark/css-vars.css';
 
+useTheme();
 </script>
 
 <template>

@@ -617,5 +617,61 @@ button{
     cursor: pointer;
 }
 button:active:not(:disabled) {
-    background: #fff;
+    background: color-mix(in srgb, var(--fg) 8%, var(--bg));
+}
+
+/* ── Element Plus 暗黑主题覆盖 ── */
+.dark .el-dialog,
+.dark .el-message-box,
+.dark .el-dropdown-menu,
+.dark .el-select-dropdown,
+.dark .el-picker-panel,
+.dark .el-popper {
+  --el-bg-color: var(--surface);
+  --el-border-color: var(--border);
+  --el-text-color-primary: var(--fg);
+  --el-text-color-secondary: var(--muted);
+  --el-fill-color-blank: var(--bg);
+  --el-fill-color-light: color-mix(in srgb, var(--fg) 6%, var(--bg));
+}
+
+.dark .el-message {
+  --el-message-bg-color: var(--surface);
+  --el-message-border-color: var(--border);
+  --el-message-text-color: var(--fg);
+}
+
+.dark .el-input__wrapper {
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--border) inset;
+}
+
+.dark .el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 25%, var(--border)) inset;
+}
+
+.dark .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.dark .el-input__inner {
+  color: var(--fg);
+}
+
+.dark .el-button {
+  --el-button-bg-color: var(--surface);
+  --el-button-border-color: var(--border);
+  --el-button-text-color: var(--fg);
+  --el-button-hover-bg-color: color-mix(in srgb, var(--fg) 8%, var(--bg));
+  --el-button-hover-border-color: var(--accent);
+  --el-button-hover-text-color: var(--fg);
+}
+
+.dark .el-button--primary {
+  --el-button-bg-color: var(--accent);
+  --el-button-border-color: var(--accent);
+  --el-button-text-color: var(--bg);
+  --el-button-hover-bg-color: color-mix(in srgb, var(--accent) 85%, var(--fg));
+  --el-button-hover-border-color: color-mix(in srgb, var(--accent) 85%, var(--fg));
+  --el-button-hover-text-color: var(--bg);
 }

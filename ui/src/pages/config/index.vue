@@ -54,21 +54,21 @@ async function handleDelete(row: EnvGroup,index:number) {
 <style scoped lang="less">
 li{
   padding: 8px;
-  background: #f1f1f1;
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
   border-radius: 6px;
   margin-bottom: 4px;
   transition: .3s;
   cursor: pointer;
-  color: #333;
+  color: var(--fg);
   position: relative;
   &:hover{
-    background: #ddd;
+    background: color-mix(in srgb, var(--fg) 12%, var(--bg));
     .actions{
       display: block;
     }
   }
   &.active{
-    @apply bg-blue-200;
+    background: color-mix(in srgb, var(--accent) 20%, var(--bg));
   }
   .actions{
     position: absolute;
