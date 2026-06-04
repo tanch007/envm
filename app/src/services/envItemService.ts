@@ -70,7 +70,7 @@ export async function changeStatus(id: string, status: boolean): Promise<void> {
                 await comm.extractTo(downloadFilePath, fullDir);
 
                 //处理下载完成后的逻辑
-                await handleDownloadComplete(id, true, envDir,fullDir);
+                await handleDownloadComplete(id,group.id, true, envDir,fullDir);
 
                 // 下载完成推送
                 wsService.broadcast({
