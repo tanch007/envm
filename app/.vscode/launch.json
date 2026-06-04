@@ -19,9 +19,6 @@
             "env": {
                 "REMOTE_DEBUGGING_PORT": "9222",
                 "VSCODE_DEBUG": "true"
-            },
-            "sourceMapPathOverrides": {
-                "/app/*": "${workspaceFolder}/src/*"
             }
         }
     ]
