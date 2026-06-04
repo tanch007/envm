@@ -18,7 +18,6 @@ declare module 'vue' {
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
-    ElSegmented: typeof import('element-plus/es')['ElSegmented']
     EnvSidebar: typeof import('./src/components/EnvSidebar.vue')['default']
     MonacoEditor: typeof import('./src/components/MonacoEditor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

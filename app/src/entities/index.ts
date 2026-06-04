@@ -1,23 +1,16 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
 import { sql,count } from 'drizzle-orm';
 import { envGroups, type EnvGroup, type NewEnvGroup } from "./EnvGroup";
 import { envItems, type EnvItem, type NewEnvItem } from "./EnvItem";
 import path from "path";
-import fs from "fs-extra";
 import { initGroups } from "./init";
+import { app } from 'electron';
+import fs from "fs-extra";
+import Database from 'better-sqlite3';
 
-const envmDataDir = path.join(process.cwd(),'../', "envm-data","envm.db");
-const dir = path.dirname(envmDataDir);
-if(!fs.existsSync(dir)){
-    fs.mkdirSync(dir, { recursive: true });
+let db: BetterSQLite3Database<Record<string, never>> & {
+    $client: Database.Database;
 }
-const db = drizzle({
-    connection: {
-        source: envmDataDir,
-        // nativeBinding:filePath 
-    }
-})
-
 /**
  * 根据 drizzle 表定义创建表（基于 sqliteTable 元数据生成 CREATE TABLE）
  */
@@ -39,7 +32,16 @@ async function initTable(tableName: string, columns: Record<string, { name: stri
     }
 }
 
-async function initEntities(): Promise<void> {
+async function initDb(): Promise<void> {
+    const appDataDir = app.getPath('appData')
+    const envmDataDir = fs.readFileSync(path.join(appDataDir,'envm', 'envmDataDir.txt')).toString()
+    const dbPath = path.join(envmDataDir, "envm.db");
+    db = drizzle({
+        connection: {
+            source: dbPath,
+            // nativeBinding:filePath 
+        }
+    })
     // 使用 drizzle schema 元数据创建表
     // 注：生产环境建议使用 drizzle-kit push 或 migrations 管理表结构
     await initTable('env_groups', {
@@ -67,20 +69,18 @@ async function initEntities(): Promise<void> {
     const total = result[0].count;
     if (total === 0) {
         // 初始化默认环境组数据
-        const data = initGroups.map(group =>({...group,...{ getListScript: Buffer.from(group.getListScript as string, 'base64').toString('utf8')}}));
+        const data = initGroups.map(group => ({ ...group, ...{ getListScript: Buffer.from(group.getListScript as string, 'base64').toString('utf8') } }));
         await db.insert(envGroups).values(data)
         console.log("Default groups initialized");
     }
 
     console.log("Entities initialized");
 }
-
-initEntities();
-
 export {
     envGroups,
     envItems,
     db,
+    initDb,
 };
 
 export type { EnvGroup, NewEnvGroup, EnvItem, NewEnvItem };

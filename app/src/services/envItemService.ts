@@ -1,17 +1,20 @@
 import { eq, ne } from 'drizzle-orm';
-import { nanoid } from "nanoid";
 import { envGroups, envItems, db, type EnvGroup, type EnvItem } from "../entities";
 import * as comm from "../utils/comm";
 import { DownloadManager }  from "node-downloader-manager";
 import path from "node:path";
 import fs from "fs-extra";
 import { wsService } from "./wsService";
+import { app } from 'electron';
 
 export async function changeStatus(id: string, status: boolean): Promise<void> {
     const [entity] = await db.select().from(envItems).where(eq(envItems.id, id)).limit(1);
     if (!entity) throw new Error("Item not found");
     const [group] = await db.select().from(envGroups).where(eq(envGroups.id, entity.groupId)).limit(1);
-    const envmDataDir = path.join(process.cwd(),'../', "envm-data");
+    
+    const appDataDir = app.getPath('appData')
+    const envmDataDir = (await fs.readFile(path.join(appDataDir,'envm','envmDataDir.txt'))).toString()
+
     const fullDir = path.join(envmDataDir, 'data', group?.name || '', entity?.version || '');
     const envDir = path.join(envmDataDir, `/env/${group?.name}`);
     const donloadDir = path.join(envmDataDir, "downloads");

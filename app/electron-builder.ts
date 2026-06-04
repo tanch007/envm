@@ -19,7 +19,7 @@ const config: Configuration = {
     files: [
         {
             "from": "dist/main",
-            "to": "",
+            "to": "dist/main",
             "filter": ["**/*"]
         },
         "package.json",
