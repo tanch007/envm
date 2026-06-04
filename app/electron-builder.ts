@@ -6,7 +6,7 @@ const config: Configuration = {
     artifactName: "${productName}-${version}-${os}.${ext}",
     // ... 其他配置
     directories: {
-        output: 'release',
+        output: 'dist/release',
         buildResources: "build"
     },
     asar: true,
@@ -17,11 +17,12 @@ const config: Configuration = {
         "node_modules/7zip-bin/**/*"
     ],
     files: [
-        "dist/*",
-        "!data/**/*",
-        "!env/**/*",
-        "!downloads/**/*",
-        "!envm.db",
+        {
+            "from": "dist/main",
+            "to": "",
+            "filter": ["**/*"]
+        },
+        "package.json",
         "!node_modules/**/*",
         "node_modules/better-sqlite3/**/*",
         "node_modules/bindings/**/*",
@@ -29,7 +30,7 @@ const config: Configuration = {
         "node_modules/file-uri-to-path/**/*",
         "node_modules/7zip-bin/**/*"
     ],
-    extraResources: ["public"],
+    extraResources: [{ from:"dist/ui",to:"ui",filter:["**/*"] }],
     win: {
         target: 'nsis',
         icon: 'build/icon.ico'

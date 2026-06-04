@@ -18,7 +18,7 @@ function createWindow(): void {
 
   const app = new Hono();
   //静态资源
-  const publicPath = process.env.VSCODE_DEBUG ? path.join(process.cwd(), 'public') :path.join(process.resourcesPath, 'public');
+  const publicPath = process.env.VSCODE_DEBUG ? path.join(process.cwd(), 'dist','ui') :path.join(process.resourcesPath, 'ui');
   app.get('/*', serveStatic({ root: publicPath }))
 
   app.route("/api/envm/groups", envGroupRoute);
@@ -31,7 +31,7 @@ function createWindow(): void {
     console.log(`Server running at http://localhost:${info.port}`);
     // 初始化 WebSocket 服务，绑定到同一 HTTP 服务器，监听路径 /api/ws
     wsService.init(server as any, '/api/ws');
-    mainWindow.loadURL(`http://localhost:${info.port}`)
+    mainWindow.loadURL(`http://localhost:${info.port}?t=${Date.now()}`)
   })
 
   process.argv.includes('--dev') && mainWindow.webContents.openDevTools()

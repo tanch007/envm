@@ -3,7 +3,7 @@ import { defineConfig } from 'electron-vite'
 export default defineConfig({
   main: {
     build:{
-      outDir:'dist',
+      outDir:'dist/main',
       sourcemap:true,
       rollupOptions:{
         input:'src/index.ts',
