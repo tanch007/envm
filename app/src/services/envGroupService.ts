@@ -4,6 +4,7 @@ import { envGroups, envItems, db, type EnvGroup, type NewEnvGroup, type NewEnvIt
 import moment from "moment";
 import * as radashi from "radashi";
 import { versionCompare } from "../utils/comm";
+import fetch from "node-fetch";
 
 /**
  * 保存环境变量组，根据是否存在 id 判断是新增还是更新
