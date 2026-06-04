@@ -1,0 +1,150 @@
+# ENVM Build Workflow
+# 在主分支推送或 PR 时自动构建并打包 Electron 应用
+
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+# 全局环境变量
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-ui:
+    name: Build UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache UI dependencies
+        uses: actions/cache@v4
+        id: cache-ui
+        with:
+          path: ui/node_modules
+          key: ${{ runner.os }}-ui-${{ hashFiles('ui/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ui-
+
+      - name: Install UI dependencies
+        if: steps.cache-ui.outputs.cache-hit != 'true'
+        working-directory: ./ui
+        run: npm ci
+
+      - name: Build UI
+        working-directory: ./ui
+        run: npm run build
+
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: ui/dist/
+          retention-days: 1
+
+  build-electron:
+    name: Build Electron (Windows)
+    needs: build-ui
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache App dependencies
+        uses: actions/cache@v4
+        id: cache-app
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-app-${{ hashFiles('app/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-app-
+
+      - name: Install App dependencies
+        if: steps.cache-app.outputs.cache-hit != 'true'
+        working-directory: ./app
+        run: npm ci
+
+      - name: Download UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: ui-dist
+          path: app/dist/ui/
+
+      # Windows 需要签名证书（仅在 tag 推送时签名）
+      - name: Setup Windows certificate
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          WIN_CERTIFICATE: ${{ secrets.WIN_CERTIFICATE }}
+          WIN_CERTIFICATE_PWD: ${{ secrets.WIN_CERTIFICATE_PWD }}
+        run: |
+          echo "$WIN_CERTIFICATE" | base64 --decode > certificate.pfx
+
+      - name: Build Electron app
+        working-directory: ./app
+        run: npm run build:main && npx electron-builder --config electron-builder.ts --win --x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ startsWith(github.ref, 'refs/tags/v') && 'certificate.pfx' || '' }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PWD }}
+
+      - name: List build artifacts
+        working-directory: ./app
+        run: |
+          echo "=== Build Output ==="
+          Get-ChildItem -Path dist/release/ -Recurse -Name
+        shell: pwsh
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: envm-win-x64
+          path: app/dist/release/
+          if-no-files-found: warn
+
+  # 发布 Release（仅在推送 tag 时执行）
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-electron]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts/
+
+      - name: List all artifacts
+        run: |
+          echo "=== All Release Artifacts ==="
+          find release-artifacts/ -type f | sort
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ENVM ${{ github.ref_name }}
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+          draft: true
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          files: |
+            release-artifacts/**/*
+          token: ${{ secrets.GITHUB_TOKEN }}
