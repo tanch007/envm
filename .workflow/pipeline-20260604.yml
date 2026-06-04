@@ -8,33 +8,6 @@ triggers:
       prefix:
         - master
 stages:
-  - name: stage-67d04326
-    displayName: build-ui
-    strategy: naturally
-    trigger: auto
-    executor: []
-    steps:
-      - step: build@nodejs
-        name: build_nodejs
-        displayName: build-ui
-        nodeVersion: 24.5.0
-        commands:
-          - cd ui
-          - '# 设置NPM源，提升安装速度'
-          - npm config set registry https://registry.npmmirror.com
-          - ''
-          - '# 执行编译命令'
-          - npm install
-        artifacts:
-          - name: BUILD_ARTIFACT
-            path:
-              - ./dist
-        caches:
-          - ~/.npm
-          - ~/.yarn
-        notify: []
-        strategy:
-          retry: '0'
   - name: stage-6b5e4f58
     displayName: build-main
     strategy: naturally
@@ -46,11 +19,13 @@ stages:
         displayName: Nodejs 构建
         nodeVersion: 24.5.0
         commands:
-          - cd app
+          - ''
           - ''
           - '# 设置NPM源，提升安装速度'
           - npm config set registry https://registry.npmmirror.com
-          - ''
+          - cd ui
+          - npm install
+          - cd ../app
           - '# 执行编译命令'
           - npm install && npm run build:winui
         artifacts:
