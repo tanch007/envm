@@ -1,0 +1,38 @@
+version: '1.0'
+name: pipeline-2026060401
+displayName: pipeline-2026060401
+triggers:
+  trigger: auto
+  push:
+    branches:
+      prefix:
+        - master
+stages:
+  - name: stage-385835ad
+    displayName: 未命名
+    strategy: naturally
+    trigger: auto
+    executor: []
+    steps:
+      - step: build@nodejs
+        name: build_nodejs
+        displayName: Nodejs 构建
+        nodeVersion: 24.5.0
+        commands:
+          - npm config set registry https://registry.npmmirror.com
+          - cd ui
+          - npm install
+          - cd ../app
+          - apt-get update && apt-get install -y python3 make g++ gcc
+          - 'ln -s /usr/bin/python3 /usr/bin/python   # 可选，node-gyp 也能通过 PYTHON 环境变量找到'
+          - npm install && npm run build:winui
+        artifacts:
+          - name: BUILD_ARTIFACT
+            path:
+              - ./app/dist/release
+        caches:
+          - ~/.npm
+          - ~/.yarn
+        notify: []
+        strategy:
+          retry: '0'
