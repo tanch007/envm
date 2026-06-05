@@ -1,22 +1,22 @@
 <template>
-    <el-dialog v-model="dialogVisible" title="环境详情" width="600px">
-        <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
-            <el-form-item label="环境名称" prop="name">
-                <el-input v-model="formData.name" placeholder="请输入环境名称" />
+    <el-dialog v-model="dialogVisible" :title="$t('envGroup.title')" width="600px">
+        <el-form ref="formRef" :model="formData" :rules="rules" label-width="150px">
+            <el-form-item :label="$t('envGroup.name')" prop="name">
+                <el-input v-model="formData.name" :placeholder="$t('envGroup.placeholderName')" />
             </el-form-item>
-            <el-form-item label="仓库URL" prop="routeUrl">
-                <el-input v-model="formData.routeUrl" type="textarea" :rows="3" placeholder="请输入仓库URL" />
+            <el-form-item :label="$t('envGroup.routeUrl')" prop="routeUrl">
+                <el-input v-model="formData.routeUrl" type="textarea" :rows="3" :placeholder="$t('envGroup.placeholderUrl')" />
             </el-form-item>
-            <el-form-item label="获取列表脚本" prop="getListScript">
-                <el-button type="primary" link @click="editor.show('查询脚本', formData.getListScript || scriptDefines.getListScript)">设置</el-button>
+            <el-form-item :label="$t('envGroup.getListScript')" prop="getListScript">
+                <el-button type="primary" link @click="editor.show($t('editor.queryScript'), formData.getListScript || scriptDefines.getListScript)">{{ $t('common.setting') }}</el-button>
             </el-form-item>
-            <el-form-item label="序号" prop="sort">
+            <el-form-item :label="$t('envGroup.sort')" prop="sort">
                 <el-input-number v-model="formData.sort" :min="1" control></el-input-number>
             </el-form-item>
         </el-form>
         <template #footer>
-            <el-button @click="dialogVisible = false">取消</el-button>
-            <el-button type="primary" :loading="loading" @click="confirm">保存</el-button>
+            <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+            <el-button type="primary" :loading="loading" @click="confirm">{{ $t('common.save') }}</el-button>
         </template>
     </el-dialog>
     <Editor ref="editor" :libs="editorLibs" @change="onEditorSave"></Editor>
@@ -29,6 +29,9 @@ import type { FormRules, FormInstance } from 'element-plus';
 import { ref, shallowRef } from 'vue';
 import scriptDefines from "./scriptDefines";
 import Editor from "@/components/TsEditorDialog.vue";
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 
 const dialogVisible = ref(false);
@@ -37,7 +40,7 @@ const formData = ref<EnvGroup>();
 
 const emiter = defineEmits(['confirm'])
 const rules: FormRules = {
-  name: [{ required: true, message: "请输入环境名称", trigger: "blur" }],
+  name: [{ required: true, message: t("envGroup.placeholderName"), trigger: "blur" }],
 };
 
 const editor = shallowRef<InstanceType<typeof Editor>>();

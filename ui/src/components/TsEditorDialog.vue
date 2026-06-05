@@ -1,10 +1,10 @@
 <template>
-    <el-dialog :title="dialog.title" v-model="dialog.visible" width="80%" :fullscreen="dialog.isFullscreen" @before-close="onClose" >
+    <el-dialog class="me-dialog" :title="dialog.title" v-model="dialog.visible" width="80%" :fullscreen="dialog.isFullscreen" @before-close="onClose" >
         <MonacoEditor v-model="editorContent" :style="{ width:'100%',height:dialog.isFullscreen ? '100%':'350px' }" :libs="libs"></MonacoEditor>
         <template #footer>
             <span>
-                <el-button @click="toggleFullscreen">{{ dialog.isFullscreen ? '关闭全屏':'全屏编辑' }}</el-button>
-                <el-button type="primary" @click="onSave" :loading="dialog.loading">保存</el-button>
+                <el-button @click="toggleFullscreen">{{ dialog.isFullscreen ? $t('editor.exitFullscreen'):$t('editor.fullscreen') }}</el-button>
+                <el-button type="primary" @click="onSave" :loading="dialog.loading">{{ $t('editor.save') }}</el-button>
             </span>
         </template>
     </el-dialog>

@@ -8,14 +8,14 @@
         </div>
         <div class="panel-desc">{{ currentEnv.desc }}</div>
         <div class="panel-stats">
-          <span class="stat-item">已安装 <span class="stat-value">{{ installedCount }}</span> 个版本</span>
-          <span class="stat-item">当前版本 <span class="stat-value">{{ activeVersion || '未设置' }}</span></span>
+          <span class="stat-item">{{ $t('panel.installedCount', { count: installedCount }) }}</span>
+          <span class="stat-item">{{ $t('panel.currentVersion', { version: activeVersion || $t('panel.notSet') }) }}</span>
         </div>
         <div class="panel-toolbar">
           <div class="panel-search">
             <span class="i-mdi-magnify search-icon"></span>
-            <input v-model="searchQuery" placeholder="搜索版本号或文件名…" />
-            <button v-if="searchQuery" class="search-clear i-mdi-close" @click="searchQuery = ''" title="清除搜索"></button>
+            <input v-model="searchQuery" :placeholder="$t('panel.searchPlaceholder')" />
+            <button v-if="searchQuery" class="search-clear i-mdi-close" @click="searchQuery = ''" :title="$t('panel.clearSearch')"></button>
           </div>
           <div class="filter-tabs">
             <button
@@ -25,18 +25,18 @@
               @click="filterStatus = tab.key"
             >{{ tab.label }}</button>
           </div>
-          <button class="refresh-btn" :class="{ loading: refreshLoading }" @click="refreshList" title="重新获取版本列表">
+          <button class="refresh-btn" :class="{ loading: refreshLoading }" @click="refreshList" :title="$t('panel.refreshList')">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 10a7 7 0 11-2.5-5.5"/>
               <path d="M17 3v4h-4"/>
             </svg>
-            <span>刷新</span>
+            <span>{{ $t('common.refresh') }}</span>
           </button>
         </div>
       </template>
       <template v-else>
-        <div class="panel-title">请添加环境</div>
-        <div class="panel-desc">点击左侧「添加环境」按钮创建新的运行时环境</div>
+        <div class="panel-title">{{ $t('panel.title') }}</div>
+        <div class="panel-desc">{{ $t('panel.desc') }}</div>
       </template>
     </header>
     <section class="flex-1 overflow-auto " v-loading="loading">
@@ -53,14 +53,14 @@
                 <path d="M17 10a7 7 0 11-2.5-5.5"/>
                 <path d="M17 3v4h-4"/>
               </svg>
-              <span>{{ refreshLoading ? '获取中…' : '获取版本' }}</span>
+              <span>{{ refreshLoading ? $t('common.loading') : $t('panel.fetchVersions') }}</span>
             </button>
           </div>
         </template>
         <template v-else>
           <div class="empty-state" data-component="Empty State" data-od-id="empty-state">
             <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="36" height="36" rx="4"/><path d="M6 16h36"/><path d="M16 6v36"/></svg>
-            <p>请先添加一个运行时环境</p>
+            <p>{{ $t('versionList.emptyNoEnv') }}</p>
           </div>
         </template>
       </section>
@@ -77,6 +77,9 @@ import { type EnvGroup } from "@/apis/EnvGroup";
 import { getWsManager } from '@/comm/websocket';
 import type { DownloadProgress, DownloadComplete, DownloadError } from '@/comm/websocket';
 import VersionItem from '@/components/VersionItem.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 
 const props = defineProps<{
@@ -118,7 +121,7 @@ function setupWebSocket() {
 
   ws.on('error', (data: DownloadError) => {
     delete downloadingMap.value[data.itemId]
-    ElMessage.error(`下载失败: ${data.error}`)
+    ElMessage.error(t('versionList.downloadFailed', { error: data.error }))
     setTimeout(()=>{loadData()}, 500)
   })
 
@@ -142,7 +145,7 @@ const { send:refreshList,loading:refreshLoading,onSuccess } = useRequest(() => g
 
 onSuccess(()=>{
     loadData()
-    ElMessage.success('获取成功')
+    ElMessage.success(t('versionList.fetchSuccess'))
 })
 
 onMounted(() => {
@@ -168,11 +171,11 @@ const activeVersion = computed(() => {
 const searchQuery = ref('')
 type FilterStatus = 'all' | 'installed' | 'uninstalled'
 const filterStatus = ref<FilterStatus>('all')
-const filterTabs = [
-  { key: 'all' as FilterStatus, label: '全部' },
-  { key: 'installed' as FilterStatus, label: '已安装' },
-  { key: 'uninstalled' as FilterStatus, label: '未安装' },
-]
+const filterTabs = computed(()=>[
+  { key: 'all' as FilterStatus, label: t('versionList.all') },
+  { key: 'installed' as FilterStatus, label: t('versionList.installed') },
+  { key: 'uninstalled' as FilterStatus, label: t('versionList.uninstalled') },
+])
 
 const filteredData = computed(() => {
   let list = data.value
@@ -193,10 +196,10 @@ const filteredData = computed(() => {
 })
 
 const emptyMessage = computed(() => {
-  if (!props.currentEnv) return '请先添加一个运行时环境'
-  if (filterStatus.value === 'installed') return '暂无已安装的版本'
-  if (filterStatus.value === 'uninstalled') return '所有版本均已安装'
-  return '暂无可用版本'
+  if (!props.currentEnv) return t('versionList.emptyNoEnv')
+  if (filterStatus.value === 'installed') return t('versionList.emptyNoInstalled')
+  if (filterStatus.value === 'uninstalled') return t('versionList.emptyAllInstalled')
+  return t('versionList.emptyNoVersions')
 })
 </script>
 

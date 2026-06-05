@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+import en from "element-plus/es/locale/lang/en";
 import { useTheme } from "@/comm/useTheme";
 import 'element-plus/theme-chalk/dark/css-vars.css';
 
 useTheme();
+
+const { locale } = useI18n()
+const elLocale = computed(() => locale.value === 'zh-CN' ? zhCn : en)
 </script>
 
 <template>
-    <el-config-provider :locale="zhCn">
+    <el-config-provider :locale="elLocale">
         <router-view />
-        <!-- 或其他根组件，如 <YourMainComponent /> -->
     </el-config-provider>
 </template>

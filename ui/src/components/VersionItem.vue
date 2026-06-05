@@ -18,12 +18,12 @@
             </template>
             <!-- 未下载状态 -->
             <template v-else>
-                <span v-if="!ver.dirPath" class="badge badge-available">未安装</span>
-                <span v-else-if="ver.enable"class="badge badge-active">当前版本</span>
-                <span v-else class="badge badge-installed">已安装</span>
+                <span v-if="!ver.dirPath" class="badge badge-available">{{ $t('versionList.notInstalled') }}</span>
+                <span v-else-if="ver.enable"class="badge badge-active">{{ $t('versionList.currentVersion') }}</span>
+                <span v-else class="badge badge-installed">{{ $t('versionList.alreadyInstalled') }}</span>
 
-                <button v-if="!ver.enable" class="btn btn-primary" @click="changeStatus()" :disabled="changeLoading">激活</button>
-                <button v-else class="btn" @click="changeStatus()" :disabled="changeLoading">取消激活</button>
+                <button v-if="!ver.enable" class="btn btn-primary" @click="changeStatus()" :disabled="changeLoading">{{ $t('versionList.activate') }}</button>
+                <button v-else class="btn" @click="changeStatus()" :disabled="changeLoading">{{ $t('versionList.deactivate') }}</button>
             </template>
         </div>
     </div>
@@ -32,6 +32,9 @@
 <script setup lang="ts">
 import api, { type EnvItem } from '@/apis/EnvItem.ts';
 import { useRequest } from 'alova/client';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
     ver: EnvItem,
@@ -46,9 +49,9 @@ onSuccess(()=>props.refreshList())
 
 function formatSpeed(speed?: number): string {
   if (speed == null) return ''
-  if (speed < 1024) return `${speed} B/s`
-  if (speed < 1024 * 1024) return `${(speed / 1024).toFixed(1)} KB/s`
-  return `${(speed / (1024 * 1024)).toFixed(1)} MB/s`
+  if (speed < 1024) return t('download.speedB', { speed })
+  if (speed < 1024 * 1024) return t('download.speedKB', { speed: (speed / 1024).toFixed(1) })
+  return t('download.speedMB', { speed: (speed / (1024 * 1024)).toFixed(1) })
 }
 
 function changeStatus() {

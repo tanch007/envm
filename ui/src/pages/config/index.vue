@@ -22,6 +22,9 @@ import api, { type EnvGroup } from "@/apis/EnvGroup";
 import systemApi from "@/apis/System.ts";
 import EnvSidebar from '@/components/EnvSidebar.vue'
 import VersionList from '@/components/VersionList.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const saveDialogRef = shallowRef()
 const currentGroup = ref('')
 const currentEnv = computed(()=>{
@@ -38,13 +41,13 @@ function changeGroup(item:EnvGroup) {
 }
 
 async function handleDelete(row: EnvGroup,index:number) {
-  ElMessageBox.confirm("确认删除该项？").then(async () => {
+  ElMessageBox.confirm(t("envGroup.confirmDelete")).then(async () => {
     try {
       await api.remove(row.id);
-      ElMessage.success("删除成功");
+      ElMessage.success(t("envGroup.deleteSuccess"));
       tableData.value.splice(index,1)
     } catch (e) {
-      ElMessage.error("删除失败");
+      ElMessage.error(t("envGroup.deleteFail"));
     }
   })
 }

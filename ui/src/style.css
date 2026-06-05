@@ -61,7 +61,14 @@ html, body, #app {
   letter-spacing: -0.01em;
   transition: background 0.35s ease, color 0.35s ease;
 }
+.me-dialog {
+  display: flex;
+  flex-direction: column;
+}
 
+.me-dialog .el-dialog__body {
+  flex: 1;
+}
 /* ── Layout ── */
 .app-shell {
   display: grid;
@@ -107,7 +114,7 @@ html, body, #app {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  /* background: color-mix(in srgb, var(--fg) 8%, transparent); */
   color: var(--fg);
   cursor: pointer;
   display: flex;
