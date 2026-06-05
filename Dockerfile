@@ -7,13 +7,10 @@ FROM electronuserland/builder:wine AS build
 #------------------------------------------------------------
 # 构建参数
 #------------------------------------------------------------
-ARG ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
-ARG ELECTRON_CUSTOM_DIR={{ version }}
 
-# 设置 Electron 镜像源加速下载
-ENV ELECTRON_MIRROR=${ELECTRON_MIRROR}
-ENV ELECTRON_CUSTOM_DIR=${ELECTRON_CUSTOM_DIR}
-ENV ELECTRON_SKIP_BINARY_DOWNLOAD=0
+# Electron 镜像源——npm install 阶段通过 .npmrc 配置，electron-builder 阶段默认使用 GitHub
+# 如需自定义镜像，可在构建时传入：
+#   docker build --build-arg ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ ...
 #------------------------------------------------------------
 # 1) 安装 app 依赖（利用 Docker 层缓存）
 #------------------------------------------------------------
