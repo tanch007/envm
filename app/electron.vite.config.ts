@@ -4,8 +4,21 @@ export default defineConfig(({ mode }) => ({
   main: {
     build:{
       outDir:'dist/main',
-      sourcemap: true,
-      minify: mode === 'production',
+      externalizeDeps: {
+        exclude: [
+          'hono',
+          '@hono/node-server',
+          'drizzle-orm',
+          'ws',
+          'fs-extra',
+          'moment',
+          'radashi',
+          'nanoid',
+          'node-fetch',
+          'node-downloader-manager',
+          '7zip-min'
+        ]
+      },
       rollupOptions:{
         input:'src/index.ts',
         output:{
