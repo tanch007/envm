@@ -1,9 +1,9 @@
-FROM electronuserland/builder:wine AS build
+FROM electronuserland/builder:wine AS builder
 
-WORKDIR /app
-COPY app/ .
-WORKDIR /ui
-COPY ui/ .
+WORKDIR /workspace
+COPY . .
+RUN cd app && npm i && npm run build:winui
 
-WORKDIR /app
-RUN npm i && npm run build:winui
+# ---------- 新增导出阶段 ----------
+FROM scratch AS export
+COPY --from=builder /workspace/app/dist/release /release
