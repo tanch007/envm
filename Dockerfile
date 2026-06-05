@@ -14,8 +14,6 @@ ARG ELECTRON_CUSTOM_DIR={{ version }}
 ENV ELECTRON_MIRROR=${ELECTRON_MIRROR}
 ENV ELECTRON_CUSTOM_DIR=${ELECTRON_CUSTOM_DIR}
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=0
-ENV NODE_ENV=production
-
 #------------------------------------------------------------
 # 1) 安装 app 依赖（利用 Docker 层缓存）
 #------------------------------------------------------------
@@ -25,12 +23,12 @@ RUN npm config set registry https://registry.npmmirror.com && \
     npm install
 
 #------------------------------------------------------------
-# 2) 安装 ui 依赖
+# 2) 安装 ui 依赖（需要 devDependencies 用于构建）
 #------------------------------------------------------------
 WORKDIR /ui
 COPY ui/package.json ui/package-lock.json* ./
 RUN npm config set registry https://registry.npmmirror.com && \
-    npm install
+    npm install --include=dev
 
 #------------------------------------------------------------
 # 3) 复制源码
@@ -49,6 +47,7 @@ RUN node build/build-ui.js
 #------------------------------------------------------------
 # 5) 构建 main 进程（electron-vite 会自动编译 native 模块）
 #------------------------------------------------------------
+ENV NODE_ENV=production
 RUN npx electron-vite build
 
 #------------------------------------------------------------
