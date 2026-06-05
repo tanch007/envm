@@ -1,0 +1,38 @@
+# ============================================================
+# Docker 构建上下文忽略规则
+# ============================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+.gitee
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Node
+**/node_modules
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# 构建输出
+app/dist
+ui/dist
+ui/build
+
+# 系统文件
+Thumbs.db
+.DS_Store
+*.bak
+
+# 文档
+docs
+README.md
+screenshot
+.workflow
