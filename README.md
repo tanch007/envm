@@ -1,6 +1,8 @@
 # ENVM — Environment Manager
 
 > 一款基于 Electron 的桌面端环境版本管理器，支持多运行时环境的版本浏览、下载、切换与 PATH 自动管理。
+>
+> 🌐 **[English](README.en.md)** · [中文](README.md)
 
 ![Electron](https://img.shields.io/badge/Electron-41.x-47848F?logo=electron) ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js) ![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
