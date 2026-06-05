@@ -37,7 +37,7 @@ function main() {
   // 1. 构建 UI 项目
   console.log('[1/2] 编译 UI 项目...');
   try {
-    execSync('npm run build', {
+    execSync('npm i && npm run build', {
       cwd: UI_DIR,
       stdio: 'inherit',
     });
