@@ -14,7 +14,8 @@ const config: Configuration = {
         "node_modules/better-sqlite3/**/*",
         "node_modules/bindings/**/*",
         "node_modules/file-uri-to-path/**/*",
-        "node_modules/7zip-bin/**/*"
+        "node_modules/7zip-bin/**/*",
+        "node_modules/ws/**/*"
     ],
     files: [
         {
@@ -28,7 +29,8 @@ const config: Configuration = {
         "node_modules/bindings/**/*",
         "node_modules/prebuild-install/**/*",
         "node_modules/file-uri-to-path/**/*",
-        "node_modules/7zip-bin/**/*"
+        "node_modules/7zip-bin/**/*",
+        "node_modules/ws/**/*"
     ],
     extraResources: [{ from:"dist/ui",to:"ui",filter:["**/*"] }],
     win: {

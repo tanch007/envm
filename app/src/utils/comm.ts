@@ -54,13 +54,14 @@ export async function extractTo(archivePath: string, targetDir: string) {
                 //如果解压后只有一个文件夹，直接将该文件夹移动到目标目录
                 const sourceDir = join(tempDir, list[0].name);
                 await fs.move(sourceDir, targetDir, { overwrite: true })
+                await fs.rmdir(tempDir);
             }
             else
             {
                 //否则将解压后的所有文件移动到目标目录
                 await fs.move(tempDir, targetDir, { overwrite: true })
             }
-            await fs.rmdir(tempDir);
+            
             resolve(true);
         });
     })

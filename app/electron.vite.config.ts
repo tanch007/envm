@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
           format:'es',
           codeSplitting:false
         },
-        external:['electron','better-sqlite3','7zip-bin']
+        external:['electron','better-sqlite3','7zip-bin','ws']
       }
     }
   },
